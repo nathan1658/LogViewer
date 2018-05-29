@@ -70,16 +70,17 @@
 		 
          //readTextFile("http://localhost:8000/logaggregation/B.txt");
 					
-              var container = $(document.createElement('div'));
+                var container = $(document.createElement('div'));
       
               $('#btAdd').click(function() {
                   if (iCnt <= 19) {
-         
+       
+		 
                       iCnt = iCnt + 1;
 					var tmpId = getId();
                       // ADD TEXTBOX.
 					  
-					    var tmpCp = $(document.createElement('div')).css({margin:'5px',width: '30px',height: '30px',background: 'url(./images/select.png) center'});
+					    var tmpCp = $(document.createElement('div')).css({margin:'5px',width: '30px',height: '30px',background: 'url(./images/select.png) center',display:'inline-block'});
 						var cpId = tmpId+"_"+"CP";
 						tmpCp.attr('id',cpId);
 						tmpCp.ColorPicker({
@@ -98,18 +99,18 @@
 							}
 						});
 					  
-					  var part1 = `<div  style="padding:5px" id="div${iCnt}">    <input type='checkbox' onchange="checkboxOnChange(this,'${tmpId}')" checked/> `;
-					  var jqueryObj = tmpCp;
+					  var part1 = `<div  style="padding:5px;display:flex;align-items:center;" id="div${iCnt}">    <input type='checkbox' onchange="checkboxOnChange(this,'${tmpId}')" checked/> `;				
+					  
 					  var part2 =  `Log file ${iCnt}: <input type=text class="input" id="tb${iCnt}" > <input id="tbid${iCnt}" type="hidden" value="${tmpId}"/></div>`;
 					  
-                      //$(container).append(part1+part2);					  
-					  container.append(part1);					  
-					  container.append(tmpCp);
-					  container.append(part2);					  
-					  
+                      container.append(part1+part2);							
                             
                       // ADD BOTH THE DIV ELEMENTS TO THE "main" CONTAINER.
                       $('#links').append(container);
+					  var firstChild = $(`#div${iCnt} :first-child`);
+					  tmpCp.insertAfter(firstChild);
+						 
+
                   }
                   // AFTER REACHING THE SPECIFIED LIMIT, DISABLE THE "ADD" BUTTON.
                   // (20 IS THE LIMIT WE HAVE SET)
@@ -122,9 +123,7 @@
          
               // REMOVE ONE ELEMENT PER CLICK.
               $('#btRemove').click(function() {
-                  if (iCnt != 1) { $('#div' + iCnt).remove(); iCnt = iCnt - 1; }
-              
-                  
+                  if (iCnt != 1) { $('#div' + iCnt).remove(); iCnt = iCnt - 1; }                               
               });
          $('#btAdd').click();
          });
