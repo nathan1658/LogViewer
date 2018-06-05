@@ -1,3 +1,4 @@
+<!--http://www.encodedna.com/2013/07/dynamically-add-remove-textbox-control-using-jquery.htm-->
 <html>
    <head>
       <script src="./jquery-3.3.1.min.js"></script>
@@ -11,6 +12,7 @@
                       {
                           var rawFile = new XMLHttpRequest();
                           rawFile.open("GET", file, false);
+                          rawFile.withCredentials = true;
                           rawFile.onreadystatechange = function ()
                           {
                               if(rawFile.readyState === 4)
