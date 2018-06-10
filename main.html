@@ -19,7 +19,7 @@
                                   if(rawFile.status === 200 || rawFile.status == 0)
                                   {
                                     var allText = rawFile.responseText;			
-									//TODO indent is missing here
+									
 									var myRegex = /\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}[\s\S]+?((?=\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}|$)(?!\n|\s))/gm;																		
 									var arr = allText.match(myRegex);													
 									//debugger
@@ -71,7 +71,7 @@
 			
          	function appendText(content,className)
          	{
-         	return (`<span class=${className} style="display:block">`+content +"</span>")
+         	return (`<pre class=${className} style="display:block;margin:0px">`+content +"</pre>")
          	}
          	
                $(function() {
@@ -111,7 +111,7 @@
 						});
 					  
 					   var part1 = `<div  style="padding:5px;display:flex;align-items:center;" id="div${iCnt}">    <input type='checkbox' onchange="checkboxOnChange(this,'${tmpId}')" checked/> `;		
-					  var part2 =  `Log file ${iCnt}: <input type=text class="input" id="tb${iCnt}" > <input id="tbid${iCnt}" type="hidden" value="${tmpId}"/></div>`;
+					  var part2 =  `Log file ${iCnt}: <input type=text class="input" id="tb${iCnt}" style="width:300px" > <input id="tbid${iCnt}" type="hidden" value="${tmpId}"/></div>`;
  					  
                       container.append(part1+part2);							
                              
@@ -186,6 +186,6 @@
    </div>
    <div id="LogArea" style="
       background: azure;
-      height: 100%;
+      height: auto;
       "></div>
 </html>
