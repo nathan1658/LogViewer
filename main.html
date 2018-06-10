@@ -1,4 +1,3 @@
-<!--http://www.encodedna.com/2013/07/dynamically-add-remove-textbox-control-using-jquery.htm-->
 <html>
    <head>
       <script src="./jquery-3.3.1.min.js"></script>
@@ -11,26 +10,37 @@
                   function readTextFile(file,id)
                       {
                           var rawFile = new XMLHttpRequest();
+						 // rawFile.withCredentials = true;
                           rawFile.open("GET", file, false);
-                          rawFile.withCredentials = true;
                           rawFile.onreadystatechange = function ()
                           {
                               if(rawFile.readyState === 4)
                               {
                                   if(rawFile.status === 200 || rawFile.status == 0)
                                   {
-                                      var allText = rawFile.responseText;
-									var arr = allText.split("\n");								
-         					var regexStr = $('#dateRegex').val();
-							   var regexp = new RegExp(regexStr);
+                                    var allText = rawFile.responseText;			
+									//TODO indent is missing here
+									var myRegex = /\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}[\s\S]+?((?=\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}|$)(?!\n|\s))/gm;																		
+									var arr = allText.match(myRegex);													
+									//debugger
+									var regexStr = $('#dateRegex').val();
+									var regexp = new RegExp(regexStr);
 							   
          					for(var i=0; i<arr.length;i++){
-         				         					
+         				         		
+										try{
          					//$('#LogArea').append(appendText(arr[i],"jerjer"));
 							  var dateStr = regexp.exec(arr[i])[0];	
+							  
 							  var dateFormat = $('#dateFormat').val();
+							  
 							  var date = moment(dateStr,dateFormat);
+							
 							  logArr.push(new log(date,arr[i],file,id));
+							  }catch(err)
+							  {
+							  console.log(err);
+							  }
          					}								
                                   }
                               }
@@ -72,17 +82,16 @@
 		 
          //readTextFile("http://localhost:8000/logaggregation/B.txt");
 					
-                var container = $(document.createElement('div'));
+              var container = $(document.createElement('div'));
       
               $('#btAdd').click(function() {
                   if (iCnt <= 19) {
-       
-		 
+         
                       iCnt = iCnt + 1;
 					var tmpId = getId();
                       // ADD TEXTBOX.
 					  
-					    var tmpCp = $(document.createElement('div')).css({margin:'5px',width: '30px',height: '30px',background: 'url(./images/select.png) center',display:'inline-block'});
+					    var tmpCp = $(document.createElement('div')).css({margin:'5px',width: '30px',height: '30px',background: 'url(./images/select.png) center'});
 						var cpId = tmpId+"_"+"CP";
 						tmpCp.attr('id',cpId);
 						tmpCp.ColorPicker({
@@ -101,18 +110,19 @@
 							}
 						});
 					  
-					  var part1 = `<div  style="padding:5px;display:flex;align-items:center;" id="div${iCnt}">    <input type='checkbox' onchange="checkboxOnChange(this,'${tmpId}')" checked/> `;				
-					  
+					   var part1 = `<div  style="padding:5px;display:flex;align-items:center;" id="div${iCnt}">    <input type='checkbox' onchange="checkboxOnChange(this,'${tmpId}')" checked/> `;		
 					  var part2 =  `Log file ${iCnt}: <input type=text class="input" id="tb${iCnt}" > <input id="tbid${iCnt}" type="hidden" value="${tmpId}"/></div>`;
-					  
+ 					  
                       container.append(part1+part2);							
+                             
+                       // ADD BOTH THE DIV ELEMENTS TO THE "main" CONTAINER.
+                       $('#links').append(container);
+					  var firstChild = $(`#div${iCnt} :first-child`);
+				  tmpCp.insertAfter(firstChild);			  
+					  
                             
                       // ADD BOTH THE DIV ELEMENTS TO THE "main" CONTAINER.
                       $('#links').append(container);
-					  var firstChild = $(`#div${iCnt} :first-child`);
-					  tmpCp.insertAfter(firstChild);
-						 
-
                   }
                   // AFTER REACHING THE SPECIFIED LIMIT, DISABLE THE "ADD" BUTTON.
                   // (20 IS THE LIMIT WE HAVE SET)
@@ -125,7 +135,9 @@
          
               // REMOVE ONE ELEMENT PER CLICK.
               $('#btRemove').click(function() {
-                  if (iCnt != 1) { $('#div' + iCnt).remove(); iCnt = iCnt - 1; }                               
+                  if (iCnt != 1) { $('#div' + iCnt).remove(); iCnt = iCnt - 1; }
+              
+                  
               });
          $('#btAdd').click();
          });
@@ -158,8 +170,8 @@
       </script>
    </head>
    <div id="ControlPanel" style="width: 100%;border-top-style: dotted;border-right-style: solid;border-bottom-style: dotted;border-left-style: solid;padding:5px">
-      <span style="margin:5px" >Regex for date: <input id="dateRegex" value = "[\S]+\s+[\S]+\s+[\S]+"/></span><br>
-      <span style="margin:5px" >Datetime format: <input id="dateFormat" value = "DD/MM/YY h:mm a"/></span><br>	  
+      <span style="margin:5px" >Regex for date: <input id="dateRegex" value = "[\S]+\s+[\S]+"/></span><br>
+      <span style="margin:5px" >Datetime format: <input id="dateFormat" value = "YYYY-MM-DD hh:mm:ss"/></span><br>	  
 	  
 	
       <div  style="padding:5px" id="main">
