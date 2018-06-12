@@ -1,191 +1,208 @@
 <html>
-   <head>
-      <script src="./jquery-3.3.1.min.js"></script>
-	  <script src="./moment.js"></script>
-	  <link rel="stylesheet" media="screen" type="text/css" href="css/colorpicker.css" />
-	  <script src="./js/colorpicker.js"></script>
-      <script>
-         var iCnt = 0;
-		 var logArr=[];
-                  function readTextFile(file,id)
-                      {
-                          var rawFile = new XMLHttpRequest();
-						 // rawFile.withCredentials = true;
-                          rawFile.open("GET", file, false);
-                          rawFile.onreadystatechange = function ()
-                          {
-                              if(rawFile.readyState === 4)
-                              {
-                                  if(rawFile.status === 200 || rawFile.status == 0)
-                                  {
-                                    var allText = rawFile.responseText;			
-									
-									var myRegex = /\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}[\s\S]+?((?=\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}|$)(?!\n|\s))/gm;																		
-									var arr = allText.match(myRegex);													
-									//debugger
-									var regexStr = $('#dateRegex').val();
-									var regexp = new RegExp(regexStr);
-							   
-         					for(var i=0; i<arr.length;i++){
-         				         		
-										try{
-         					//$('#LogArea').append(appendText(arr[i],"jerjer"));
-							  var dateStr = regexp.exec(arr[i])[0];	
-							  
-							  var dateFormat = $('#dateFormat').val();
-							  
-							  var date = moment(dateStr,dateFormat);
-							
-							  logArr.push(new log(date,arr[i],file,id));
-							  }catch(err)
-							  {
-							  console.log(err);
-							  }
-         					}								
-                                  }
-                              }
-							  
-                          }
-                          rawFile.send(null);
-                      };
-         	function log(datetime,content,url,id)
-			{
+<!--TODO line number/seperate between files?-->
+<!--TODO Log level-->
+<head>		
+	<meta charset="UTF-8">			  
+	<script src="./jquery-3.3.1.min.js"></script>
+	<script src="./moment.js"></script>
+	<style>
+		.logRow 
+		{
+			margin-top: 2px;
+			margin-bottom: 2px;
+		}
+
+		.ControlPanel 
+		{
+			width: 500px;
+			background: azure;			
+			right: 0;
+			opacity: 0.5;
+			position: fixed;
+		}
+
+		.ConTrolPanel:hover
+		{
+			opacity: 1;
+		}
+	</style>
+	<link rel="stylesheet" media="screen" type="text/css" href="css/colorpicker.css" />
+	<script src="./js/colorpicker.js"></script>
+	<script>
+		var iCnt = 0;
+		var logArr = [];
+		var idArr = [];
+		function readTextFile(file, id) {
+			var rawFile = new XMLHttpRequest();
+
+			rawFile.open("GET", file, false);
+
+			rawFile.onreadystatechange = function () {
+				if (rawFile.readyState === 4) {
+					if (rawFile.status === 200 || rawFile.status == 0) {
+						var allText = rawFile.responseText;
+						//TODO seek for a better one
+						var myRegex = /\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}[\s\S]+?((?=\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}|$)(?!\n|\s))/gm;
+						var arr = allText.match(myRegex);
+						var regexStr = $('#dateRegex').val();
+						var regexp = new RegExp(regexStr);
+						for (var i = 0;i < arr.length;i++) {
+							try {								
+								var dateStr = regexp.exec(arr[i])[0];
+								var dateFormat = $('#dateFormat').val();
+								var date = moment(dateStr, dateFormat);
+								logArr.push(new log(date, arr[i], file, id));
+							} catch (err) {
+								console.log(err);
+							}
+						}
+					}
+				}
+			}
+			rawFile.send(null);
+		};
+
+		function log(datetime, content, url, id) {
 			this.datetime = datetime;
 			this.content = content;
 			this.url = url;
 			this.id = id;
-			}
-			
-			function getId()
-			{
-				return Math.random().toString(36).substring(7);
-			}
-			
-			function sortlogArrByDatetime(a,b)
-			{
+		}
+
+		function getId() {
+			return Math.random().toString(36).substring(7);
+		}
+
+		function sortlogArrByDatetime(a, b) {
 			var aDate = a.datetime;
 			var bDate = b.datetime;
-			 return ((aDate < bDate) ? -1 : ((aDate > bDate) ? 1 : 0));
-			}
-			
-			
-         	function appendText(content,className)
-         	{
-         	return (`<pre class=${className} style="display:block;margin:0px">`+content +"</pre>")
-         	}
-         	
-               $(function() {
-			   
-			 
-			   
-         //readTextFile("http://localhost:8000/logaggregation/A.txt");
-		 
-         //readTextFile("http://localhost:8000/logaggregation/B.txt");
-					
-              var container = $(document.createElement('div'));
-      
-              $('#btAdd').click(function() {
-                  if (iCnt <= 19) {
-         
-                      iCnt = iCnt + 1;
+			return ((aDate < bDate) ? -1 : ((aDate > bDate) ? 1 : 0));
+		}
+
+		function appendText(content, className) {
+			return (`<pre class="${className} logRow" style="display:block;">`+ content + "</pre>")
+		}
+
+		$(function () {
+			var container = $(document.createElement('div'));
+			$('#btAdd').click(function () {
+				if (iCnt <= 19) {
+					iCnt = iCnt + 1;
 					var tmpId = getId();
-                      // ADD TEXTBOX.
-					  
-					    var tmpCp = $(document.createElement('div')).css({margin:'5px',width: '30px',height: '30px',background: 'url(./images/select.png) center'});
-						var cpId = tmpId+"_"+"CP";
-						tmpCp.attr('id',cpId);
-						tmpCp.ColorPicker({
-							color: '#0000ff',
-							onShow: function (colpkr) {
-								$(colpkr).fadeIn(500);
-								return false;
-							},
-							onHide: function (colpkr) {
-								$(colpkr).fadeOut(500);
-								return false;
-							},
-							onChange: function (hsb, hex, rgb) {
-								$(`#${cpId}`).css('backgroundColor', '#' + hex);		
-								$(`.${tmpId}`).css('background', '#' + hex);
-							}
-						});
-					  
-					   var part1 = `<div  style="padding:5px;display:flex;align-items:center;" id="div${iCnt}">    <input type='checkbox' onchange="checkboxOnChange(this,'${tmpId}')" checked/> `;		
-					  var part2 =  `Log file ${iCnt}: <input type=text class="input" id="tb${iCnt}" style="width:300px" > <input id="tbid${iCnt}" type="hidden" value="${tmpId}"/></div>`;
- 					  
-                      container.append(part1+part2);							
-                             
-                       // ADD BOTH THE DIV ELEMENTS TO THE "main" CONTAINER.
-                       $('#links').append(container);
-					  var firstChild = $(`#div${iCnt} :first-child`);
-				  tmpCp.insertAfter(firstChild);			  
-					  
-                            
-                      // ADD BOTH THE DIV ELEMENTS TO THE "main" CONTAINER.
-                      $('#links').append(container);
-                  }
-                  // AFTER REACHING THE SPECIFIED LIMIT, DISABLE THE "ADD" BUTTON.
-                  // (20 IS THE LIMIT WE HAVE SET)
-                  else {      
-                      $(container).append('<label>Reached the limit</label>'); 
-                      $('#btAdd').attr('class', 'bt-disable'); 
-                      $('#btAdd').attr('disabled', 'disabled');
-                  }
-              });
-         
-              // REMOVE ONE ELEMENT PER CLICK.
-              $('#btRemove').click(function() {
-                  if (iCnt != 1) { $('#div' + iCnt).remove(); iCnt = iCnt - 1; }
-              
-                  
-              });
-         $('#btAdd').click();
-         });
-         
-		 function checkboxOnChange(obj, className)
-		 {
-		 if(!$(obj).is(":checked"))
-		 {
-		 $('.'+className).hide();
-		 }
-		 else{
-		 $('.'+className).show();}
-		 }
-		 
-         function gogogo(){
-		 logArr = [];
-         $("#LogArea").empty();
-         for(var i=1;i<=iCnt;i++)
-         {
-         	var docVal = $("#tb"+i).val();
-			var id = $("#tbid"+i).val();
-         	readTextFile(docVal,id);
-         }
-		 logArr.sort(sortlogArrByDatetime);
-		 for(var i=0;i<logArr.length;i++)
-		 	$('#LogArea').append(appendText(logArr[i].content,logArr[i].id));
-         }
-         
-              
-      </script>
-   </head>
-   <div id="ControlPanel" style="width: 100%;border-top-style: dotted;border-right-style: solid;border-bottom-style: dotted;border-left-style: solid;padding:5px">
-      <span style="margin:5px" >Regex for date: <input id="dateRegex" value = "[\S]+\s+[\S]+"/></span><br>
-      <span style="margin:5px" >Datetime format: <input id="dateFormat" value = "YYYY-MM-DD hh:mm:ss"/></span><br>	  
-	  
-	
-      <div  style="padding:5px" id="main">
-         <input type="button" id="btAdd" value="Add" class="bt" />
-         <input type="button" id="btRemove" value="Remove" class="bt" />
-      </div>
-      <hr>
-      <div id="links">
-      </div>
-      <hr>
-      <button style="padding:5px" onclick="gogogo()"> gogogo </button>
-   </div>
-   <div id="LogArea" style="
-      background: azure;
-      height: auto;
-      "></div>
+					idArr.push(tmpId);					
+					var tmpCp = $(document.createElement('div')).css({ margin: '5px', width: '30px', height: '30px', background: 'url(./images/select.png) center rgb(255,255,255)' });
+					var cpId = tmpId + "_" + "CP";
+					tmpCp.attr('id', cpId);
+					tmpCp.ColorPicker({
+						color: '#0000ff',
+						onShow: function (colpkr) {
+							$(colpkr).fadeIn(500);
+							return false;
+						},
+						onHide: function (colpkr) {
+							$(colpkr).fadeOut(500);
+							return false;
+						},
+						onChange: function (hsb, hex, rgb) {
+							$(`#${cpId}`).css('backgroundColor', '#' + hex);
+							$(`.${tmpId}`).css('background', '#' + hex);
+						}
+					});
+					var part1 = `<div style="padding:5px;display:flex;align-items:center;" id="div${iCnt}"> <input type='checkbox' onchange="checkboxOnChange(this,'${tmpId}')" checked/> `;
+					var part2 = `Log file ${iCnt}: <input type=text class="input" id="tb${iCnt}" style="width:300px" > <input id="tbid${iCnt}" type="hidden" value="${tmpId}"/></div>`;
+					container.append(part1 + part2);
+					$('#links').append(container);
+					var firstChild = $(`#div${iCnt} :first-child`);
+					tmpCp.insertAfter(firstChild);
+					$('#links').append(container);
+				}			
+				else {
+					$(container).append('<label>Reached the limit</label>');
+					$('#btAdd').attr('class', 'bt-disable');
+					$('#btAdd').attr('disabled', 'disabled');
+				}
+			});
+
+			// REMOVE ONE ELEMENT PER CLICK.
+			$('#btRemove').click(function () {
+				if (iCnt != 1) {
+					$('#div' + iCnt).remove();
+					iCnt = iCnt - 1;
+				}
+			});
+			$('#btAdd').click();
+		});
+
+		function checkboxOnChange(obj, className) {
+			if (!$(obj).is(":checked")) {
+				$('.' + className).hide();
+			}
+			else {
+				$('.' + className).show();
+			}
+		}
+
+		function gogogo() {
+			logArr = [];
+
+			$("#LogArea").empty();
+
+			for (var i = 1;i <= iCnt;i++) {
+				var docVal = $("#tb" + i).val();
+				var id = $("#tbid" + i).val();
+				readTextFile(docVal, id);
+			}
+
+			logArr.sort(sortlogArrByDatetime);
+
+			for (var i = 0;i < logArr.length;i++) {				
+				$('#LogArea').append(appendText(logArr[i].content, logArr[i].id));
+			}
+
+			for (var i = 0;i < idArr.length;i++) {
+				var tmpString = $('#' + idArr[i] + '_CP').css("background");
+				//background css string
+				var rgbStr = tmpString.match(/rgb\(.*?\)/);
+				$('.' + idArr[i]).css("background", rgbStr[0]);
+			}
+		}
+
+		function OpenMenu() {
+			$("#ControlPanel").toggleClass("closed");
+			var panelWidth  =$("#ControlPanel").width();
+			if(	$("#ControlPanel").hasClass("closed"))
+			{
+				$("#ControlPanel").animate({right:panelWidth*-1});
+			}
+			else
+			{
+				$("#ControlPanel").animate({right:0});
+			}
+		}
+	</script>
+</head>
+<div id="ControlPanel" class="ControlPanel">
+	<button style="
+    position: absolute;
+    left: -35px;" onclick="OpenMenu()">≡</button>
+	<span style="margin:5px">Regex for date:
+		<input id="dateRegex" value="[\S]+\s+[\S]+" />
+	</span>
+	<br>
+	<span style="margin:5px">Datetime format:
+		<input id="dateFormat" value="YYYY-MM-DD hh:mm:ss" />
+	</span>
+	<br>
+
+	<div style="padding:5px" id="main">
+		<input type="button" id="btAdd" value="Add" class="bt" />
+		<input type="button" id="btRemove" value="Remove" class="bt" />
+	</div>
+	<hr>
+	<div id="links">
+	</div>
+	<hr>
+	<button style="padding:5px;margin:5px" onclick="gogogo()"> Go go go~ </button>
+</div>
+<div id="LogArea" style="height: auto;"></div>
 </html>
