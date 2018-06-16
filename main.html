@@ -1,29 +1,77 @@
 <html>
 <!--TODO line number/seperate between files?-->
 <!--TODO Log level-->
-<head>		
-	<meta charset="UTF-8">			  
+
+<head>
+	<meta charset="UTF-8">
 	<script src="./jquery-3.3.1.min.js"></script>
 	<script src="./moment.js"></script>
 	<style>
-		.logRow 
-		{
+		.logRow {
 			margin-top: 2px;
 			margin-bottom: 2px;
 		}
 
-		.ControlPanel 
-		{
+		body {
+			font-family: Arial, Helvetica, sans-serif;
+			background: black;
+		}
+
+		.logLevelDiv>span {
+			display: inline-block;
+		}
+
+		.ControlPanel {
 			width: 500px;
-			background: azure;			
-			right: 0;
-			opacity: 0.5;
+			right: 10;
 			position: fixed;
 		}
 
-		.ConTrolPanel:hover
-		{
+		.regexForm label,
+		input {
+			display: inline-block;
+			margin-bottom: 5px;
+
+		}
+
+		.regexForm label {
+			width: 30%;
+			text-align: right;
+		}
+
+		.regexForm label+input {
+			width: 50%;
+			margin: 0 0 0 4%;
+		}
+
+		.regexForm input+input {
+			float: right;
+		}
+
+
+
+		.ControlPanelContent {
+			opacity: 0.5;
+			transition: opacity .5s ease-out;
+			background: gainsboro;
+			padding: 5px;			
+			border-radius: 15px;
+
+		}
+
+		.ControlPanelContent:hover {
 			opacity: 1;
+			transition: opacity .5s ease-out;
+		}
+
+		.formItem {
+			width: 30%;
+		}
+
+		/*Always show vertical scroll bar*/
+
+		body {
+			overflow-y: scroll;
 		}
 	</style>
 	<link rel="stylesheet" media="screen" type="text/css" href="css/colorpicker.css" />
@@ -32,6 +80,9 @@
 		var iCnt = 0;
 		var logArr = [];
 		var idArr = [];
+		var checkedLogLevel = [];
+		var checkedLogFile = [];
+		var textFilter = [];
 		function readTextFile(file, id) {
 			var rawFile = new XMLHttpRequest();
 
@@ -42,31 +93,40 @@
 					if (rawFile.status === 200 || rawFile.status == 0) {
 						var allText = rawFile.responseText;
 						//TODO seek for a better one
-						var myRegex = /\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}[\s\S]+?((?=\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}|$)(?!\n|\s))/gm;
+						var myRegex = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}[\s\S]+?((?=^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}|$)(?!\n|\s))/gm;
 						var arr = allText.match(myRegex);
 						var regexStr = $('#dateRegex').val();
 						var regexp = new RegExp(regexStr);
-						for (var i = 0;i < arr.length;i++) {
-							try {								
+						for (var i = 0; i < arr.length; i++) {
+							try {
 								var dateStr = regexp.exec(arr[i])[0];
 								var dateFormat = $('#dateFormat').val();
 								var date = moment(dateStr, dateFormat);
-								logArr.push(new log(date, arr[i], file, id));
+								var logLevelRegex = /\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} ([\S]+)/gm;
+								var logLevel = logLevelRegex.exec(arr[i])[1];
+								logArr.push(new log(date, arr[i], file, id, logLevel));
 							} catch (err) {
 								console.log(err);
 							}
 						}
 					}
+					if (rawFile.status !== 200) {
+						var errorMsg = 'URL: ' + rawFile.responseURL + '\nStatus code: ' + rawFile.status + '\nMessage: ' + rawFile.statusText;
+						alert(errorMsg);
+					}
 				}
 			}
+
 			rawFile.send(null);
+
 		};
 
-		function log(datetime, content, url, id) {
+		function log(datetime, content, url, id, logLevel) {
 			this.datetime = datetime;
 			this.content = content;
 			this.url = url;
 			this.id = id;
+			this.logLevel = logLevel;
 		}
 
 		function getId() {
@@ -80,17 +140,41 @@
 		}
 
 		function appendText(content, className) {
-			return (`<pre class="${className} logRow" style="display:block;">`+ content + "</pre>")
+			return (`<pre class="${className} logRow" style="display:block;">` + content + "</pre>")
 		}
 
+		function AddTextFilter() {
+
+			var input = $("#filterInput").val();
+			if (input != "") {
+				textFilter.push(input);
+				$("#filterCount").text(textFilter.length);
+				$("#filterInput").val("");
+			}
+			updateLogAreaWithFilter();
+		}
+
+		function ClearTextFilter() {
+			textFilter = [];
+			$("#filterCount").text(0);
+			updateLogAreaWithFilter();
+		}
 		$(function () {
+
+			//init logLevelArray
+			$(".cb_logLevel").each(function () {
+				checkedLogLevel.push(this.value);
+			});
+
+
+
 			var container = $(document.createElement('div'));
 			$('#btAdd').click(function () {
 				if (iCnt <= 19) {
 					iCnt = iCnt + 1;
 					var tmpId = getId();
-					idArr.push(tmpId);					
-					var tmpCp = $(document.createElement('div')).css({ margin: '5px', width: '30px', height: '30px', background: 'url(./images/select.png) center rgb(255,255,255)' });
+					idArr.push(tmpId);
+					var tmpCp = $(document.createElement('div')).css({ margin: '5px', width: '30px', height: '30px', background: 'url(./images/select.png) center rgb(173,173,173)' });
 					var cpId = tmpId + "_" + "CP";
 					tmpCp.attr('id', cpId);
 					tmpCp.ColorPicker({
@@ -105,22 +189,41 @@
 						},
 						onChange: function (hsb, hex, rgb) {
 							$(`#${cpId}`).css('backgroundColor', '#' + hex);
-							$(`.${tmpId}`).css('background', '#' + hex);
+							$(`.${tmpId}`).css('color', '#' + hex);
 						}
 					});
 					var part1 = `<div style="padding:5px;display:flex;align-items:center;" id="div${iCnt}"> <input type='checkbox' onchange="checkboxOnChange(this,'${tmpId}')" checked/> `;
+					//init checkedLogFile
+					checkedLogFile.push(tmpId);
+
 					var part2 = `Log file ${iCnt}: <input type=text class="input" id="tb${iCnt}" style="width:300px" > <input id="tbid${iCnt}" type="hidden" value="${tmpId}"/></div>`;
 					container.append(part1 + part2);
 					$('#links').append(container);
 					var firstChild = $(`#div${iCnt} :first-child`);
 					tmpCp.insertAfter(firstChild);
 					$('#links').append(container);
-				}			
+				}
 				else {
 					$(container).append('<label>Reached the limit</label>');
 					$('#btAdd').attr('class', 'bt-disable');
 					$('#btAdd').attr('disabled', 'disabled');
 				}
+
+				$(".logLevelDiv>input").each(function () {
+					$(this).change(function () {
+						var isChecked = $(this).prop("checked");
+						if (isChecked) {
+							checkedLogLevel.push(this.value);
+						} else//Remove it from array
+						{
+							var index = checkedLogLevel.indexOf(this.value);
+							if (index !== -1) checkedLogLevel.splice(index, 1);
+						}
+						updateLogAreaWithFilter();
+					});
+				});
+
+
 			});
 
 			// REMOVE ONE ELEMENT PER CLICK.
@@ -136,18 +239,61 @@
 		function checkboxOnChange(obj, className) {
 			if (!$(obj).is(":checked")) {
 				$('.' + className).hide();
+				var index = checkedLogFile.indexOf(className);
+				if (index !== -1) checkedLogFile.splice(index, 1);
 			}
 			else {
 				$('.' + className).show();
+				checkedLogFile.push(className);
+
+			}
+			updateLogAreaWithFilter();
+		}
+
+		function updateLogAreaWithFilter() {
+			$("#LogArea").empty();
+			var resultArray = [];
+
+
+
+
+			var arrayContainsSubString = function (filterArr, val) {
+				return filterArr.some(function (e) {
+					return val.toLowerCase().indexOf(e.toLowerCase()) > 0;
+				})
+			}
+
+			logArr.forEach(function (val) {
+				if (!checkedLogFile.includes(val.id))
+					return;
+				if (!checkedLogLevel.includes(val.logLevel))
+					return;
+				if (arrayContainsSubString(textFilter, val.content))
+					return;
+
+				resultArray.push(val);
+			});
+
+			resultArray.forEach(function (val) {
+				$('#LogArea').append(appendText(val.content, val.id));
+			});
+
+			for (var i = 0; i < idArr.length; i++) {
+				//Get color picker value
+				var tmpString = $('#' + idArr[i] + '_CP').css("background");
+				//append to target class background
+				var rgbStr = tmpString.match(/rgb\(.*?\)/);
+				$('.' + idArr[i]).css("color", rgbStr[0]);
 			}
 		}
+
 
 		function gogogo() {
 			logArr = [];
 
 			$("#LogArea").empty();
 
-			for (var i = 1;i <= iCnt;i++) {
+			for (var i = 1; i <= iCnt; i++) {
 				var docVal = $("#tb" + i).val();
 				var id = $("#tbid" + i).val();
 				readTextFile(docVal, id);
@@ -155,54 +301,116 @@
 
 			logArr.sort(sortlogArrByDatetime);
 
-			for (var i = 0;i < logArr.length;i++) {				
-				$('#LogArea').append(appendText(logArr[i].content, logArr[i].id));
-			}
+			updateLogAreaWithFilter();
+		}
 
-			for (var i = 0;i < idArr.length;i++) {
-				var tmpString = $('#' + idArr[i] + '_CP').css("background");
-				//background css string
-				var rgbStr = tmpString.match(/rgb\(.*?\)/);
-				$('.' + idArr[i]).css("background", rgbStr[0]);
-			}
+
+		function SelectAllbtnOnClick() {
+
+			$(".cb_logLevel").each(function () {
+
+				$(this).prop('checked', true);
+				$(this).trigger("change");
+			});
+
+		}
+
+
+		function UnselectAllbtnOnClick() {
+			$(".cb_logLevel").each(function () {
+
+				$(this).prop('checked', false);
+				$(this).trigger("change");
+			});
+
 		}
 
 		function OpenMenu() {
 			$("#ControlPanel").toggleClass("closed");
-			var panelWidth  =$("#ControlPanel").width();
-			if(	$("#ControlPanel").hasClass("closed"))
-			{
-				$("#ControlPanel").animate({right:panelWidth*-1});
+			var panelWidth = $("#ControlPanel").width();
+			if ($("#ControlPanel").hasClass("closed")) {
+				$("#ControlPanel").animate({ right: panelWidth * -1 });
 			}
-			else
-			{
-				$("#ControlPanel").animate({right:0});
+			else {
+				$("#ControlPanel").animate({ right: 10 });
 			}
 		}
 	</script>
 </head>
 <div id="ControlPanel" class="ControlPanel">
-	<button style="
-    position: absolute;
-    left: -35px;" onclick="OpenMenu()">≡</button>
-	<span style="margin:5px">Regex for date:
-		<input id="dateRegex" value="[\S]+\s+[\S]+" />
-	</span>
-	<br>
-	<span style="margin:5px">Datetime format:
-		<input id="dateFormat" value="YYYY-MM-DD hh:mm:ss" />
-	</span>
-	<br>
+	<button style="position: absolute;left: -35px;" onclick="OpenMenu()">≡</button>
+	<div class="ControlPanelContent">
+		<div class="regexForm">
 
-	<div style="padding:5px" id="main">
-		<input type="button" id="btAdd" value="Add" class="bt" />
-		<input type="button" id="btRemove" value="Remove" class="bt" />
+			<label>Regex for date:</label>
+			<input id="dateRegex" value="[\S]+\s+[\S]+" />
+
+
+			<label>Datetime format:</label>
+			<input id="dateFormat" value="YYYY-MM-DD hh:mm:ss" />
+
+		</div>
+
+		<hr>
+		<div style="padding:5px" id="main">
+			<input type="button" id="btAdd" value="Add" class="bt" />
+			<input type="button" id="btRemove" value="Remove" class="bt" />
+		</div>
+		<div id="links">
+		</div>
+		<hr>
+		<div class="logLevelDiv">
+			<span>
+				<input type="checkbox" id="cb_ALL" class="cb_logLevel" value="ALL" checked>
+				<label for="cb_ALL">ALL</label>
+			</span>
+
+			<span>
+				<input type="checkbox" id="cb_DEBUG" class="cb_logLevel" value="DEBUG" checked>
+				<label for="cb_DEBUG">DEBUG</label>
+			</span>
+			<span>
+				<input type="checkbox" id="cb_ERROR" class="cb_logLevel" value="ERROR" checked>
+				<label for="cb_ERROR">ERROR</label>
+			</span>
+			<span>
+				<input type="checkbox" id="cb_FATAL" class="cb_logLevel" value="FATAL" checked>
+				<label for="cb_FATAL">FATAL</label>
+			</span>
+			<span>
+				<input type="checkbox" id="cb_INFO" class="cb_logLevel" value="INFO" checked>
+				<label for="cb_INFO">INFO</label>
+			</span>
+			<span>
+				<input type="checkbox" id="cb_OFF" class="cb_logLevel" value="OFF" checked>
+				<label for="cb_OFF">OFF</label>
+			</span>
+			<span>
+				<input type="checkbox" id="cb_TRACE" class="cb_logLevel" value="TRACE" checked>
+				<label for="cb_TRACE">TRACE</label>
+			</span>
+			<span>
+				<input type="checkbox" id="cb_WARN" class="cb_logLevel" value="WARN" checked>
+				<label for="cb_WARN">WARN</label>
+			</span>
+		</div>
+		<br>
+		<input type="button" onclick="SelectAllbtnOnClick()" value="Select All">
+
+		<input type="button" onclick="UnselectAllbtnOnClick()" value="Unselect All">
+		<hr>
+		<div>
+			Filter count:
+			<span id="filterCount">0</span>
+			<br> Filter:
+			<input type="textbox" id="filterInput">
+			<input type="button" value="Add" onclick="AddTextFilter()"></input>
+			<input type="button" value="Clear All" onclick="ClearTextFilter()"></input>
+		</div>
+		<hr>
+		<button style="padding:5px;margin:5px" onclick="gogogo()"> Go go go~ </button>
 	</div>
-	<hr>
-	<div id="links">
-	</div>
-	<hr>
-	<button style="padding:5px;margin:5px" onclick="gogogo()"> Go go go~ </button>
 </div>
 <div id="LogArea" style="height: auto;"></div>
+
 </html>
