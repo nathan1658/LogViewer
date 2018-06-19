@@ -34,7 +34,7 @@
 		}
 
 		.regexForm label {
-			width: 30%;
+			width: 40%;
 			text-align: right;
 		}
 
@@ -53,8 +53,8 @@
 			opacity: 0.5;
 			transition: opacity .5s ease-out;
 			background: gainsboro;
-			padding: 5px;			
-			border-radius: 15px;
+			padding: 5px;
+			border-radius: 5px;
 
 		}
 
@@ -82,6 +82,7 @@
 		var checkedLogLevel = [];
 		var checkedLogFile = [];
 		var textFilter = [];
+		var textIncluded = [];
 		function readTextFile(file, id) {
 			var rawFile = new XMLHttpRequest();
 
@@ -92,7 +93,8 @@
 					if (rawFile.status === 200 || rawFile.status == 0) {
 						var allText = rawFile.responseText;
 						//TODO seek for a better one
-						var myRegex = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}[\s\S]+?((?=^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}|$)(?!\n|\s))/gm;
+						var logRegexFormat = $("#logRegexFormat").val();
+						var myRegex = new RegExp(logRegexFormat, "gm");
 						var arr = allText.match(myRegex);
 						var regexStr = $('#dateRegex').val();
 						var regexp = new RegExp(regexStr);
@@ -101,7 +103,8 @@
 								var dateStr = regexp.exec(arr[i])[0];
 								var dateFormat = $('#dateFormat').val();
 								var date = moment(dateStr, dateFormat);
-								var logLevelRegex = /\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} ([\S]+)/gm;
+								var logLevelRegexFormat = $("#logLevelRegexFormat").val();
+								var logLevelRegex = new RegExp(logLevelRegexFormat, "gm");
 								var logLevel = logLevelRegex.exec(arr[i])[1];
 								logArr.push(new log(date, arr[i], file, id, logLevel));
 							} catch (err) {
@@ -147,17 +150,41 @@
 			var input = $("#filterInput").val();
 			if (input != "") {
 				textFilter.push(input);
-				$("#filterCount").text(textFilter.length);
 				$("#filterInput").val("");
 			}
+
+			//Append text 
+			$("#filteredText").append(input + "<br/>");
 			updateLogAreaWithFilter();
 		}
 
+
+
 		function ClearTextFilter() {
 			textFilter = [];
-			$("#filterCount").text(0);
+			$("#filteredText").html("");
 			updateLogAreaWithFilter();
 		}
+		//For Text inclusion
+		function AddTextInclude() {
+
+			var input = $("#includeInput").val();
+			if (input != "") {
+				textIncluded.push(input);
+				$("#includeInput").val("");
+			}
+
+			//Append text 
+			$("#IncludedText").append(input + "<br/>");
+			updateLogAreaWithFilter();
+		}
+
+		function ClearTextInclude() {
+			textIncluded = [];
+			$("#IncludedText").html("");
+			updateLogAreaWithFilter();
+		}
+
 		$(function () {
 
 			//init logLevelArray
@@ -253,9 +280,6 @@
 			$("#LogArea").empty();
 			var resultArray = [];
 
-
-
-
 			var arrayContainsSubString = function (filterArr, val) {
 				return filterArr.some(function (e) {
 					return val.toLowerCase().indexOf(e.toLowerCase()) > 0;
@@ -269,7 +293,12 @@
 					return;
 				if (arrayContainsSubString(textFilter, val.content))
 					return;
-
+				if(textIncluded.length>0)
+				{
+					debugger
+					if(!arrayContainsSubString(textIncluded,val.content))
+						return;
+				}
 				resultArray.push(val);
 			});
 
@@ -348,6 +377,12 @@
 			<label>Datetime format:</label>
 			<input id="dateFormat" value="YYYY-MM-DD hh:mm:ss" />
 
+			<label>Log Regex format:</label>
+			<input id="logRegexFormat" value="^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}[\s\S]+?((?=^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}|$)(?!\n|\s))"
+			/>
+
+			<label>Loglevel Regex format:</label>
+			<input id="logLevelRegexFormat" value="^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\S*\s([\S]+)" />
 		</div>
 
 		<hr>
@@ -358,6 +393,7 @@
 		<div id="links">
 		</div>
 		<hr>
+		<!--TODO may be use a array here?-->
 		<div class="logLevelDiv">
 			<span>
 				<input type="checkbox" id="cb_ALL" class="cb_logLevel" value="ALL" checked>
@@ -399,12 +435,21 @@
 		<input type="button" onclick="UnselectAllbtnOnClick()" value="Unselect All">
 		<hr>
 		<div>
-			Filter count:
-			<span id="filterCount">0</span>
-			<br> Filter:
+			Filter by:
 			<input type="textbox" id="filterInput">
 			<input type="button" value="Add" onclick="AddTextFilter()"></input>
 			<input type="button" value="Clear All" onclick="ClearTextFilter()"></input>
+			<div id="filteredText" style="font-style:italic"></div>
+		</div>
+		<hr>
+		<div>
+			
+			
+			Include:
+			<input type="textbox" id="includeInput">
+			<input type="button" value="Add" onclick="AddTextInclude()"></input>
+			<input type="button" value="Clear All" onclick="ClearTextInclude()"></input>
+			<div id="IncludedText" style="font-style:italic"></div>
 		</div>
 		<hr>
 		<button style="padding:5px;margin:5px" onclick="gogogo()"> Go go go~ </button>
