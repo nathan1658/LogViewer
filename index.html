@@ -21,7 +21,7 @@
 		}
 
 		.ControlPanel {
-			width: 500px;
+			width: 550px;
 			right: 10;
 			position: fixed;
 		}
@@ -53,7 +53,7 @@
 			opacity: 0.5;
 			transition: opacity .5s ease-out;
 			background: gainsboro;
-			padding: 5px;
+			padding: 15px;
 			border-radius: 5px;
 
 		}
@@ -96,6 +96,11 @@
 						var logRegexFormat = $("#logRegexFormat").val();
 						var myRegex = new RegExp(logRegexFormat, "gm");
 						var arr = allText.match(myRegex);
+						if(arr==null||arr.length==0)
+						{
+							alert("Regex match failed for file "+rawFile.responseURL+"!");
+							return;
+						}
 						var regexStr = $('#dateRegex').val();
 						var regexp = new RegExp(regexStr);
 						for (var i = 0; i < arr.length; i++) {
