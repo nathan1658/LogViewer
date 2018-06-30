@@ -5,70 +5,70 @@
 	<meta charset="UTF-8">
 	<script src="./js/jquery-3.3.1.min.js"></script>
 	<script src="./js/moment.js"></script>
+	<script src="./js/jquery-ui.js"></script>
+	<link rel="stylesheet" href="./css/jquery-ui.css">
 	<style>
 		.logRow {
 			margin-top: 2px;
 			margin-bottom: 2px;
 		}
-
 		body {
 			font-family: Arial, Helvetica, sans-serif;
 			background: black;
 		}
-
 		.logLevelDiv>span {
 			display: inline-block;
 		}
-
 		.ControlPanel {
-			width: 500px;
+			width: 550px;
 			right: 10;
 			position: fixed;
 		}
-
 		.regexForm label,
 		input {
 			display: inline-block;
 			margin-bottom: 5px;
-
 		}
-
 		.regexForm label {
-			width: 30%;
+			width: 40%;
 			text-align: right;
 		}
-
 		.regexForm label+input {
 			width: 50%;
 			margin: 0 0 0 4%;
 		}
-
 		.regexForm input+input {
 			float: right;
 		}
-
-
-
 		.ControlPanelContent {
 			opacity: 0.5;
 			transition: opacity .5s ease-out;
 			background: gainsboro;
-			padding: 5px;			
-			border-radius: 15px;
-
+			padding: 15px;
+			border-radius: 5px;
 		}
-
 		.ControlPanelContent:hover {
 			opacity: 1;
 			transition: opacity .5s ease-out;
 		}
-
 		.formItem {
 			width: 30%;
 		}
 
+		.ui-accordion-content {
+ 		   background: none;
+		}
+		
+		.noselect {
+  		-webkit-touch-callout: none; /* iOS Safari */
+    	-webkit-user-select: none; /* Safari */
+    	-khtml-user-select: none; /* Konqueror HTML */
+        -moz-user-select: none; /* Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+        user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome and Opera */
+		}
 		/*Always show vertical scroll bar*/
-
 		body {
 			overflow-y: scroll;
 		}
@@ -82,18 +82,23 @@
 		var checkedLogLevel = [];
 		var checkedLogFile = [];
 		var textFilter = [];
+		var textIncluded = [];
 		function readTextFile(file, id) {
 			var rawFile = new XMLHttpRequest();
-
 			rawFile.open("GET", file, false);
-
 			rawFile.onreadystatechange = function () {
 				if (rawFile.readyState === 4) {
 					if (rawFile.status === 200 || rawFile.status == 0) {
 						var allText = rawFile.responseText;
 						//TODO seek for a better one
-						var myRegex = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}[\s\S]+?((?=^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}|$)(?!\n|\s))/gm;
+						var logRegexFormat = $("#logRegexFormat").val();
+						var myRegex = new RegExp(logRegexFormat, "gm");
 						var arr = allText.match(myRegex);
+						if(arr==null||arr.length==0)
+						{
+							alert("Regex match failed for file "+rawFile.responseURL+"!");
+							return;
+						}
 						var regexStr = $('#dateRegex').val();
 						var regexp = new RegExp(regexStr);
 						for (var i = 0; i < arr.length; i++) {
@@ -101,7 +106,8 @@
 								var dateStr = regexp.exec(arr[i])[0];
 								var dateFormat = $('#dateFormat').val();
 								var date = moment(dateStr, dateFormat);
-								var logLevelRegex = /\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} ([\S]+)/gm;
+								var logLevelRegexFormat = $("#logLevelRegexFormat").val();
+								var logLevelRegex = new RegExp(logLevelRegexFormat, "gm");
 								var logLevel = logLevelRegex.exec(arr[i])[1];
 								logArr.push(new log(date, arr[i], file, id, logLevel));
 							} catch (err) {
@@ -115,11 +121,8 @@
 					}
 				}
 			}
-
 			rawFile.send(null);
-
 		};
-
 		function log(datetime, content, url, id, logLevel) {
 			this.datetime = datetime;
 			this.content = content;
@@ -127,46 +130,62 @@
 			this.id = id;
 			this.logLevel = logLevel;
 		}
-
 		function getId() {
 			return Math.random().toString(36).substring(7);
 		}
-
 		function sortlogArrByDatetime(a, b) {
 			var aDate = a.datetime;
 			var bDate = b.datetime;
 			return ((aDate < bDate) ? -1 : ((aDate > bDate) ? 1 : 0));
 		}
-
 		function appendText(content, className) {
 			return (`<pre class="${className} logRow" style="display:block;">` + content + "</pre>")
 		}
-
 		function AddTextFilter() {
-
 			var input = $("#filterInput").val();
 			if (input != "") {
 				textFilter.push(input);
-				$("#filterCount").text(textFilter.length);
 				$("#filterInput").val("");
 			}
+			//Append text 
+			$("#filteredText").append(input + "<br/>");
 			updateLogAreaWithFilter();
 		}
-
 		function ClearTextFilter() {
 			textFilter = [];
-			$("#filterCount").text(0);
+			$("#filteredText").html("");
+			updateLogAreaWithFilter();
+		}
+		//For Text inclusion
+		function AddTextInclude() {
+			var input = $("#includeInput").val();
+			if (input != "") {
+				textIncluded.push(input);
+				$("#includeInput").val("");
+			}
+			//Append text 
+			$("#IncludedText").append(input + "<br/>");
+			updateLogAreaWithFilter();
+		}
+		function ClearTextInclude() {
+			textIncluded = [];
+			$("#IncludedText").html("");
 			updateLogAreaWithFilter();
 		}
 		$(function () {
+			debugger
+			var data=  localStorage.getItem("aaa");
 
+			localStorage.setItem('aaa',123);
+
+			$(".settingSection").accordion({
+      			collapsible: true,
+				active: false
+    		});
 			//init logLevelArray
 			$(".cb_logLevel").each(function () {
 				checkedLogLevel.push(this.value);
 			});
-
-
-
 			var container = $(document.createElement('div'));
 			$('#btAdd').click(function () {
 				if (iCnt <= 19) {
@@ -194,8 +213,7 @@
 					var part1 = `<div style="padding:5px;display:flex;align-items:center;" id="div${iCnt}"> <input type='checkbox' onchange="checkboxOnChange(this,'${tmpId}')" checked/> `;
 					//init checkedLogFile
 					checkedLogFile.push(tmpId);
-
-					var part2 = `Log file ${iCnt}: <input type=text class="input" id="tb${iCnt}" style="width:300px" > <input id="tbid${iCnt}" type="hidden" value="${tmpId}"/></div>`;
+					var part2 = `Log file ${iCnt}: <input type=text class="input" id="tb${iCnt}" style="width:380px" > <input id="tbid${iCnt}" type="hidden" value="${tmpId}"/></div>`;
 					container.append(part1 + part2);
 					$('#links').append(container);
 					var firstChild = $(`#div${iCnt} :first-child`);
@@ -207,7 +225,6 @@
 					$('#btAdd').attr('class', 'bt-disable');
 					$('#btAdd').attr('disabled', 'disabled');
 				}
-
 				$(".cb_logLevel").each(function () {
 					$(this).change(function () {
 						var isChecked = $(this).prop("checked");
@@ -221,10 +238,7 @@
 						updateLogAreaWithFilter();
 					});
 				});
-
-
 			});
-
 			// REMOVE ONE ELEMENT PER CLICK.
 			$('#btRemove').click(function () {
 				if (iCnt != 1) {
@@ -234,7 +248,6 @@
 			});
 			$('#btAdd').click();
 		});
-
 		function checkboxOnChange(obj, className) {
 			if (!$(obj).is(":checked")) {
 				$('.' + className).hide();
@@ -244,24 +257,17 @@
 			else {
 				$('.' + className).show();
 				checkedLogFile.push(className);
-
 			}
 			updateLogAreaWithFilter();
 		}
-
 		function updateLogAreaWithFilter() {
 			$("#LogArea").empty();
 			var resultArray = [];
-
-
-
-
 			var arrayContainsSubString = function (filterArr, val) {
 				return filterArr.some(function (e) {
 					return val.toLowerCase().indexOf(e.toLowerCase()) > 0;
 				})
 			}
-
 			logArr.forEach(function (val) {
 				if (!checkedLogFile.includes(val.id))
 					return;
@@ -269,13 +275,19 @@
 					return;
 				if (arrayContainsSubString(textFilter, val.content))
 					return;
-
+				if(textIncluded.length>0)
+				{
+					debugger
+					if(!arrayContainsSubString(textIncluded,val.content))
+						return;
+				}
 				resultArray.push(val);
 			});
-
 			resultArray.forEach(function (val) {
 				$('#LogArea').append(appendText(val.content, val.id));
 			});
+			//TODO work around for selecting last line
+			$('#LogArea').append(appendText("&zwnj;","noselect"));
 
 			for (var i = 0; i < idArr.length; i++) {
 				//Get color picker value
@@ -285,45 +297,41 @@
 				$('.' + idArr[i]).css("color", rgbStr[0]);
 			}
 		}
-
-
 		function gogogo() {
 			logArr = [];
-
 			$("#LogArea").empty();
-
+			console.time("(ALL)readTextFile");
 			for (var i = 1; i <= iCnt; i++) {
 				var docVal = $("#tb" + i).val();
 				var id = $("#tbid" + i).val();
+				
+				var tmpTimerName = "Read "+docVal;
+
+				console.time(tmpTimerName);
 				readTextFile(docVal, id);
+				console.timeEnd(tmpTimerName);
 			}
-
+			console.timeEnd("(ALL)readTextFile");
+			console.time("logArr sort");
 			logArr.sort(sortlogArrByDatetime);
+			console.timeEnd("logArr sort");
 
+			console.time("UpdateLogAreaWithFilter");
 			updateLogAreaWithFilter();
+			console.timeEnd("UpdateLogAreaWithFilter");
 		}
-
-
 		function SelectAllbtnOnClick() {
-
 			$(".cb_logLevel").each(function () {
-
 				$(this).prop('checked', true);
 				$(this).trigger("change");
 			});
-
 		}
-
-
 		function UnselectAllbtnOnClick() {
 			$(".cb_logLevel").each(function () {
-
 				$(this).prop('checked', false);
 				$(this).trigger("change");
 			});
-
 		}
-
 		function OpenMenu() {
 			$("#ControlPanel").toggleClass("closed");
 			var panelWidth = $("#ControlPanel").width();
@@ -336,20 +344,25 @@
 		}
 	</script>
 </head>
-<div id="ControlPanel" class="ControlPanel">
+<div id="ControlPanel" class="ControlPanel noselect">
 	<button style="position: absolute;left: -35px;" onclick="OpenMenu()">≡</button>
 	<div class="ControlPanelContent">
-		<div class="regexForm">
+		<div class="regexForm settingSection">
+			<h3>Regex Settings</h3>
+			<div>
+				<label>Regex for date:</label>
+				<input id="dateRegex" value="[\S]+\s+[\S]+" />
 
-			<label>Regex for date:</label>
-			<input id="dateRegex" value="[\S]+\s+[\S]+" />
+				<label>Datetime format:</label>
+				<input id="dateFormat" value="YYYY-MM-DD hh:mm:ss" />
 
+				<label>Log Regex format:</label>
+				<input id="logRegexFormat" value="^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}[\s\S]+?((?=^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}|$)(?!\n|\s))"/>
 
-			<label>Datetime format:</label>
-			<input id="dateFormat" value="YYYY-MM-DD hh:mm:ss" />
-
+				<label>Loglevel Regex format:</label>
+				<input id="logLevelRegexFormat" value="^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\S*\s([\S]+)" />
+			</div>
 		</div>
-
 		<hr>
 		<div style="padding:5px" id="main">
 			<input type="button" id="btAdd" value="Add" class="bt" />
@@ -358,6 +371,7 @@
 		<div id="links">
 		</div>
 		<hr>
+		<!--TODO may be use a array here?-->
 		<div class="logLevelDiv">
 			<span>
 				<input type="checkbox" id="cb_ALL" class="cb_logLevel" value="ALL" checked>
@@ -399,15 +413,26 @@
 		<input type="button" onclick="UnselectAllbtnOnClick()" value="Unselect All">
 		<hr>
 		<div>
-			Filter count:
-			<span id="filterCount">0</span>
-			<br> Filter:
+		
+				Ignore Text:
+			
 			<input type="textbox" id="filterInput">
 			<input type="button" value="Add" onclick="AddTextFilter()"></input>
 			<input type="button" value="Clear All" onclick="ClearTextFilter()"></input>
+			<div id="filteredText" style="font-style:italic"></div>
 		</div>
 		<hr>
-		<button style="padding:5px;margin:5px" onclick="gogogo()"> Go go go~ </button>
+		<div>		
+			
+				Include:
+					
+			<input type="textbox" id="includeInput">
+			<input type="button" value="Add" onclick="AddTextInclude()"></input>
+			<input type="button" value="Clear All" onclick="ClearTextInclude()"></input>
+			<div id="IncludedText" style="font-style:italic"></div>
+		</div>
+		<hr>
+		<button style="padding:5px;margin:5px" onclick="gogogo()"> Go Go Go~ </button> <span id="Timer"></span>
 	</div>
 </div>
 <div id="LogArea" style="height: auto;"></div>
