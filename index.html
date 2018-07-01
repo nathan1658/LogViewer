@@ -41,6 +41,12 @@
 			float: right;
 		}
 		
+		.finalRow button
+		{
+			padding:5px;
+			margin:5px;
+		}
+
 		/*TODO looking for pure css function*/
 		.ControlPanelContent {
 		/*	opacity: 0.5;
@@ -138,11 +144,80 @@
 			this.url = url;
 			this.id = id;
 			this.logLevel = logLevel;
+		
 		}
 
 		function GetConfigurationJson()
 		{
+			var config={};
+			var LogFileArr = [];
+			for (var i = 1; i <= iCnt; i++) {
+				var docVal = $("#tb" + i).val();
+				if(docVal != "")
+				{
+					LogFileArr.push(docVal);
+				}
+			}
 			
+			config.LogFileArr = LogFileArr;
+			config.dateRegex = $("#dateRegex").val();
+			config.dateFormat = $("#dateFormat").val();
+			config.logRegexFormat =  $("#logRegexFormat").val();
+			config.logLevelRegexFormat =  $("#logLevelRegexFormat").val();
+			config.checkedLogLevel = checkedLogLevel;
+
+			config.textFilter = textFilter;
+			config.textIncluded = textIncluded;
+
+
+			return JSON.stringify(config);
+		}
+
+		function LoadConfig(jsonString)
+		{	
+			logArr = [];
+			try{
+				var config = JSON.parse(jsonString);
+			}catch(err)
+			{
+				alert("Error format. "+err);
+				return;
+			}
+			$("#dateRegex").val(config.dateRegex) ;
+		 	$("#dateFormat").val(config.dateFormat) ;
+			$("#logRegexFormat").val(config.logRegexFormat);
+			$("#logLevelRegexFormat").val(config.logLevelRegexFormat);
+			
+			while(iCnt<config.LogFileArr.length)
+			{
+				$("#btAdd").click();
+			}
+			while(iCnt>config.LogFileArr.length)
+			{
+				$("#btRemove").click();
+			}
+
+			config.LogFileArr.forEach(function(x,index) {
+				$("#tb" + (index+1)).val(x);
+			});
+			
+			UnselectAllbtnOnClick();
+			config.checkedLogLevel.forEach(x=>
+			{
+				$("#cb_"+x).prop('checked',true);
+			})
+
+			ClearTextFilter();
+			config.textFilter.forEach(x=>{
+				AddTextFilter(x,false);
+			});
+
+			ClearTextInclude();
+			config.textIncluded.forEach(x=>{
+				AddTextInclude(x,false);
+			})
+			
+			updateLogAreaWithFilter();
 		}
 
 		function getId() {
@@ -156,15 +231,17 @@
 		function appendText(content, className) {
 			return (`<pre class="${className} logRow" style="display:block;">` + content + "</pre>")
 		}
-		function AddTextFilter() {
-			var input = $("#filterInput").val();
+		function AddTextFilter(input,updateLog) {
+			
 			if (input != "") {
 				textFilter.push(input);
 				$("#filterInput").val("");
 			}
 			//Append text 
 			$("#filteredText").append(input + "<br/>");
-			updateLogAreaWithFilter();
+			if(updateLog){
+				updateLogAreaWithFilter();
+			}
 		}
 		function ClearTextFilter() {
 			textFilter = [];
@@ -172,21 +249,49 @@
 			updateLogAreaWithFilter();
 		}
 		//For Text inclusion
-		function AddTextInclude() {
-			var input = $("#includeInput").val();
+		function AddTextInclude(input,updateLog) {
+			
 			if (input != "") {
 				textIncluded.push(input);
 				$("#includeInput").val("");
 			}
 			//Append text 
 			$("#IncludedText").append(input + "<br/>");
-			updateLogAreaWithFilter();
+			if(updateLog){
+				updateLogAreaWithFilter();
+			}
 		}
 		function ClearTextInclude() {
 			textIncluded = [];
 			$("#IncludedText").html("");
 			updateLogAreaWithFilter();
 		}
+
+		function copyToClipboard(text){
+			var dummy = document.createElement("input");
+			document.body.appendChild(dummy);
+			dummy.setAttribute('value', text);
+			dummy.select();
+			document.execCommand("copy");
+			document.body.removeChild(dummy);
+		}
+
+		function GenerateConfig()
+		{
+			var config = GetConfigurationJson();
+			copyToClipboard(config);
+			alert("Configuration copied to clipboard.")
+		}
+
+		function PromptLoadConfig()
+		{
+			var input = prompt("Enter config json below:");
+			if(input !=null)
+			{
+				LoadConfig(input);
+			}
+		}
+
 		$(function () {
 
 			initLogLevel();
@@ -246,7 +351,7 @@
 							var index = checkedLogLevel.indexOf(this.value);
 							if (index !== -1) checkedLogLevel.splice(index, 1);
 						}
-						updateLogAreaWithFilter();
+						updateLogAreaWithFilter();						
 					});
 				});
 
@@ -270,6 +375,24 @@
 				$("#ICntValue").text(iCnt);
 			});
 			$('#btAdd').click();
+
+			$('#AddTextBtn').click(function () {
+				var input = $("#includeInput").val();
+				AddTextInclude(input,true);
+			});
+						
+			$('#AddTextFilterBtn').click(function () {
+				var input = $("#filterInput").val();
+				AddTextFilter(input,true);
+			});
+
+			$('#GenerateConfigBtn').click(function () {
+				GenerateConfig();
+			});
+
+			$('#LoadConfigBtn').click(function () {
+				PromptLoadConfig();
+			});
 
 			//TODO looking for pure css function..
 			$(".colorpicker").hover(function()
@@ -337,8 +460,7 @@
 				if (arrayContainsSubString(textFilter, val.content))
 					return;
 				if(textIncluded.length>0)
-				{
-					debugger
+				{					
 					if(!arrayContainsSubString(textIncluded,val.content))
 						return;
 				}
@@ -358,6 +480,7 @@
 				$('.' + idArr[i]).css("color", rgbStr[0]);
 			}
 			console.timeEnd("updateLogAreaWithFilter");
+			$("#NumOfLog").text(resultArray.length);
 		}
 		function gogogo() {
 			$(".loader").css("visibility","visible");
@@ -426,15 +549,17 @@
 		}
 		function SelectAllbtnOnClick() {
 			$(".cb_logLevel").each(function () {
-				$(this).prop('checked', true);
-				$(this).trigger("change");
+				$(this).prop('checked', true);				
 			});
+			checkedLogLevel = LOG_LEVELS;
+			updateLogAreaWithFilter();
 		}
 		function UnselectAllbtnOnClick() {
 			$(".cb_logLevel").each(function () {
-				$(this).prop('checked', false);
-				$(this).trigger("change");
+				$(this).prop('checked', false);					
 			});
+			checkedLogLevel = [];
+			updateLogAreaWithFilter();
 		}
 		function OpenMenu() {
 			$("#ControlPanel").toggleClass("closed");
@@ -491,9 +616,9 @@
 				Ignore Text:
 			
 			<input type="textbox" id="filterInput">
-			<input type="button" value="Add" onclick="AddTextFilter()"></input>
+			<input type="button" value="Add" id="AddTextFilterBtn" ></input>
 			<input type="button" value="Clear All" onclick="ClearTextFilter()"></input>
-			<div id="filteredText" style="font-style:italic"></div>
+			<div id="filteredText" style="font-weight:bold"></div>
 		</div>
 		<hr>
 		<div>		
@@ -501,12 +626,19 @@
 				Include:
 					
 			<input type="textbox" id="includeInput">
-			<input type="button" value="Add" onclick="AddTextInclude()"></input>
+			<input type="button" value="Add" id="AddTextBtn" ></input>
 			<input type="button" value="Clear All" onclick="ClearTextInclude()"></input>
-			<div id="IncludedText" style="font-style:italic"></div>
+			<div id="IncludedText" style="font-weight:bold"></div>
 		</div>
 		<hr>
-		<button style="padding:5px;margin:5px" onclick="gogogo()"> Go Go Go~ </button> <span id="Timer"></span> <div class="loader" style="display: inline-block;vertical-align: middle;visibility: hidden;"></div>
+		<div class="finalRow">
+			<button  onclick="gogogo()"> Go Go Go~ </button> <span id="Timer"></span> <div class="loader" style="display: inline-block;vertical-align: middle;visibility: hidden;"></div>
+			<span>Number of log: </span><span id="NumOfLog">0</span>
+			<div style="float:right">
+				<button id="GenerateConfigBtn">GenerateConfig</button>
+				<button id="LoadConfigBtn">Load config</button>
+			</div>
+		</div>
 	</div>
 </div>
 <div id="LogArea" style="height: auto;"></div>
