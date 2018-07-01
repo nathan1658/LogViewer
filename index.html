@@ -244,6 +244,7 @@
 			UnselectAllbtnOnClick();
 			config.checkedLogLevel.forEach(x => {
 				$("#cb_" + x).prop('checked', true);
+				checkedLogLevel.push(x);
 			})
 
 			ClearTextFilter();
@@ -650,6 +651,7 @@
 		}
 	</script>
 </head>
+<body>
 <div id="ControlPanel" class="ControlPanel noselect">
 	<button id="MenuBtn" style="position: absolute;left: -50px;height: 40px;width: 40px;font-size: 30px;" onclick="OpenMenu()">≡</button>
 	<div class="ControlPanelContent">
@@ -757,6 +759,6 @@
 		</div>
 	</div>
 </div>
-<div id="LogArea" style="height: auto;"></div>
-
+<div id="LogArea" style="height: 100%;"></div>
+</body>
 </html>
