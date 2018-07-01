@@ -40,17 +40,22 @@
 		.regexForm input+input {
 			float: right;
 		}
+		
+		/*TODO looking for pure css function*/
 		.ControlPanelContent {
-			opacity: 0.5;
-			transition: opacity .5s ease-out;
+		/*	opacity: 0.5;
+			transition: opacity .5s ease-out;*/
 			background: gainsboro;
 			padding: 15px;
 			border-radius: 5px;
 		}
-		.ControlPanelContent:hover {
-			opacity: 1;
-			transition: opacity .5s ease-out;
-		}
+
+		/*	.ControlPanelContent:hover {
+				opacity: 1;
+				transition: opacity .5s ease-out;
+			}
+		*/
+
 		.formItem {
 			width: 30%;
 		}
@@ -105,6 +110,7 @@
 		var textFilter = [];
 		var textIncluded = [];
 		var MAX_LOG_FILE = 10;
+		var LOG_LEVELS = ["ALL","DEBUG","ERROR","FATAL","INFO","OFF","TRACE","WARN"];
 		function readTextFile(file, id) {
 			return new Promise(function(resolve,reject){
 			console.time("XMLHttpRequest: "+file);
@@ -133,6 +139,12 @@
 			this.id = id;
 			this.logLevel = logLevel;
 		}
+
+		function GetConfigurationJson()
+		{
+			
+		}
+
 		function getId() {
 			return Math.random().toString(36).substring(7);
 		}
@@ -176,16 +188,16 @@
 			updateLogAreaWithFilter();
 		}
 		$(function () {
-		
+
+			initLogLevel();
+
 			$("#MAX_LOG_COUNT").text(MAX_LOG_FILE);
 			$(".settingSection").accordion({
       			collapsible: true,
 				active: false
     		});
 			//init logLevelArray
-			$(".cb_logLevel").each(function () {
-				checkedLogLevel.push(this.value);
-			});
+			checkedLogLevel = LOG_LEVELS;
 			var container = $(document.createElement('div'));
 			$('#btAdd').click(function () {
 				if (iCnt < MAX_LOG_FILE ) {
@@ -258,7 +270,44 @@
 				$("#ICntValue").text(iCnt);
 			});
 			$('#btAdd').click();
+
+			//TODO looking for pure css function..
+			$(".colorpicker").hover(function()
+			{
+				$(".ControlPanelContent").css('transition','transition: opacity .5s ease-out');
+				$(".ControlPanelContent").css('opacity','1');			
+			},function()
+			{
+				$(".ControlPanelContent").css('transition','opacity .5s ease-out');
+				$(".ControlPanelContent").css('opacity','0.5');					
+			});
+
+			$(".ControlPanelContent").hover(function()
+			{
+				$(this).css('transition','transition: opacity .5s ease-out');
+				$(this).css('opacity','1');
+			},function()
+			{
+				$(this).css('transition','opacity .5s ease-out');
+				$(this).css('opacity','0.5');			
+			});
+
+		
 		});
+
+		function initLogLevel()
+		{
+			LOG_LEVELS.forEach(element => {
+				
+			var tmpSpan = `<span>
+								<input type="checkbox" id="cb_${element}" class="cb_logLevel" value="${element}" checked>
+								<label for="cb_${element}">${element}</label>
+							</span>`;							
+			$("#logLevelDiv").append(tmpSpan);
+
+			});
+		}
+
 		function checkboxOnChange(obj, className) {
 			if (!$(obj).is(":checked")) {
 				$('.' + className).hide();
@@ -429,40 +478,8 @@
 		</div>
 		<hr>
 		<!--TODO may be use a array here?-->
-		<div class="logLevelDiv">
-			<span>
-				<input type="checkbox" id="cb_ALL" class="cb_logLevel" value="ALL" checked>
-				<label for="cb_ALL">ALL</label>
-			</span>
-
-			<span>
-				<input type="checkbox" id="cb_DEBUG" class="cb_logLevel" value="DEBUG" checked>
-				<label for="cb_DEBUG">DEBUG</label>
-			</span>
-			<span>
-				<input type="checkbox" id="cb_ERROR" class="cb_logLevel" value="ERROR" checked>
-				<label for="cb_ERROR">ERROR</label>
-			</span>
-			<span>
-				<input type="checkbox" id="cb_FATAL" class="cb_logLevel" value="FATAL" checked>
-				<label for="cb_FATAL">FATAL</label>
-			</span>
-			<span>
-				<input type="checkbox" id="cb_INFO" class="cb_logLevel" value="INFO" checked>
-				<label for="cb_INFO">INFO</label>
-			</span>
-			<span>
-				<input type="checkbox" id="cb_OFF" class="cb_logLevel" value="OFF" checked>
-				<label for="cb_OFF">OFF</label>
-			</span>
-			<span>
-				<input type="checkbox" id="cb_TRACE" class="cb_logLevel" value="TRACE" checked>
-				<label for="cb_TRACE">TRACE</label>
-			</span>
-			<span>
-				<input type="checkbox" id="cb_WARN" class="cb_logLevel" value="WARN" checked>
-				<label for="cb_WARN">WARN</label>
-			</span>
+		<div class="logLevelDiv" id="logLevelDiv">
+		
 		</div>
 		<br>
 		<input type="button" onclick="SelectAllbtnOnClick()" value="Select All">
