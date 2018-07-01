@@ -81,6 +81,10 @@
 			width: 40%;
 		}
 
+		div .column button {
+			width: 100px;
+		}
+
 		.formItem {
 			width: 30%;
 		}
@@ -188,6 +192,7 @@
 		}
 
 		function GetConfigurationJson() {
+			//TODO store checked log file/color?
 			var config = {};
 			var LogFileArr = [];
 			for (var i = 1; i <= iCnt; i++) {
@@ -224,13 +229,14 @@
 			$("#logRegexFormat").val(config.logRegexFormat);
 			$("#logLevelRegexFormat").val(config.logLevelRegexFormat);
 
-			while (iCnt < config.LogFileArr.length) {
-				$("#btAdd").click();
+			if (config.LogFileArr.length > 0) {
+				while (iCnt < config.LogFileArr.length) {
+					$("#btAdd").click();
+				}
+				while (iCnt > config.LogFileArr.length) {
+					$("#btRemove").click();
+				}
 			}
-			while (iCnt > config.LogFileArr.length) {
-				$("#btRemove").click();
-			}
-
 			config.LogFileArr.forEach(function (x, index) {
 				$("#tb" + (index + 1)).val(x);
 			});
@@ -447,18 +453,22 @@
 				$("#jsonFile").click();
 			});
 			$("#jsonFile").change(function (evt) {
-				try{
-				var files = evt.target.files; // FileList object
-				var file = files[0];
-				var reader = new FileReader();
-				reader.readAsBinaryString(file);
-				var jsonString = reader.result;
-				}catch(err)
-				{
-					alert("Could not load file."+err);
+
+				try {
+					var files = evt.target.files; // FileList object				
+					var file = files[0];
+					$("#jsonFile").val("");
+					var reader = new FileReader();
+					reader.onloadend = function () {
+						var jsonString = reader.result;
+						LoadConfig(jsonString);
+					}
+					reader.readAsBinaryString(file);
+
+				} catch (err) {
+					alert("Could not load file." + err);
 					return;
 				}
-				LoadConfig(jsonString);
 			}
 			);
 
@@ -479,6 +489,13 @@
 				$(this).css('opacity', '0.5');
 			});
 
+			$("#MenuBtn").hover(function () {
+				$(".ControlPanelContent").css('transition', 'transition: opacity .5s ease-out');
+				$(".ControlPanelContent").css('opacity', '1');
+			}, function () {
+				$(".ControlPanelContent").css('transition', 'opacity .5s ease-out');
+				$(".ControlPanelContent").css('opacity', '0.5');
+			});
 
 		});
 
@@ -634,7 +651,7 @@
 	</script>
 </head>
 <div id="ControlPanel" class="ControlPanel noselect">
-	<button style="position: absolute;left: -65px;height: 50px;width: 50px;font-size: 30px;" onclick="OpenMenu()">≡</button>
+	<button id="MenuBtn" style="position: absolute;left: -50px;height: 40px;width: 40px;font-size: 30px;" onclick="OpenMenu()">≡</button>
 	<div class="ControlPanelContent">
 		<div class="regexForm settingSection">
 			<h3>Regex Settings</h3>
@@ -702,7 +719,7 @@
 		<hr>
 		<div class="settingSection">
 			<h3>Save/Load setting</h3>
-			<div>
+			<div style="display: table;width: 100%;border:0;">
 				<div class="row">
 					<div class="column">
 						<span>
@@ -734,7 +751,7 @@
 			<button onclick="gogogo()"> Go Go Go~ </button>
 			<span id="Timer"></span>
 			<div class="loader" style="display: inline-block;vertical-align: middle;visibility: hidden;"></div>
-			<span>Number of log: </span>
+			<span>Number of log row: </span>
 			<span id="NumOfLog">0</span>
 
 		</div>
