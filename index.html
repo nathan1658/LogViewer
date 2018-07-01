@@ -85,10 +85,12 @@
 		var textIncluded = [];
 		function readTextFile(file, id) {
 			return new Promise(function(resolve,reject){
+			console.time("XMLHttpRequest: "+file);
 			var rawFile = new XMLHttpRequest();
 			rawFile.open("GET", file, true);
 			rawFile.onload = function () {
 				if (rawFile.readyState === 4) {
+					console.timeEnd("XMLHttpRequest: "+file);
 					if (rawFile.status === 200 || rawFile.status == 0) {
 						var allText = rawFile.responseText;
 						resolve({allText:allText,file:file,id:id});
@@ -275,6 +277,7 @@
 			}
 		}
 		function gogogo() {
+			console.time("gogogo");
 			logArr = [];
 			$("#LogArea").empty();
 			console.time("(ALL)readTextFile");
@@ -327,7 +330,7 @@
 				console.time("UpdateLogAreaWithFilter");
 				updateLogAreaWithFilter();
 				console.timeEnd("UpdateLogAreaWithFilter");
-
+				console.timeEnd("gogogo");
 			});
 		
 		}
