@@ -58,7 +58,28 @@
 		.ui-accordion-content {
  		   background: none;
 		}
-		
+
+		.loader {
+			border: 6px solid #f3f3f3;
+			border-radius: 50%;
+			border-top: 6px solid #0a0a0a;
+			width: 20px;
+			height: 20px;
+			-webkit-animation: spin 2s linear infinite;
+			animation: spin 1s linear infinite;
+		}
+
+		/* Safari */
+		@-webkit-keyframes spin {
+		0% { -webkit-transform: rotate(0deg); }
+		100% { -webkit-transform: rotate(360deg); }
+		}
+
+		@keyframes spin {
+		0% { transform: rotate(0deg); }
+		100% { transform: rotate(360deg); }
+		}
+
 		.noselect {
   		-webkit-touch-callout: none; /* iOS Safari */
     	-webkit-user-select: none; /* Safari */
@@ -83,6 +104,7 @@
 		var checkedLogFile = [];
 		var textFilter = [];
 		var textIncluded = [];
+		var MAX_LOG_FILE = 10;
 		function readTextFile(file, id) {
 			return new Promise(function(resolve,reject){
 			console.time("XMLHttpRequest: "+file);
@@ -155,7 +177,7 @@
 		}
 		$(function () {
 		
-
+			$("#MAX_LOG_COUNT").text(MAX_LOG_FILE);
 			$(".settingSection").accordion({
       			collapsible: true,
 				active: false
@@ -166,7 +188,7 @@
 			});
 			var container = $(document.createElement('div'));
 			$('#btAdd').click(function () {
-				if (iCnt <= 19) {
+				if (iCnt < MAX_LOG_FILE ) {
 					iCnt = iCnt + 1;
 					var tmpId = getId();
 					idArr.push(tmpId);
@@ -191,15 +213,14 @@
 					var part1 = `<div style="padding:5px;display:flex;align-items:center;" id="div${iCnt}"> <input type='checkbox' onchange="checkboxOnChange(this,'${tmpId}')" checked/> `;
 					//init checkedLogFile
 					checkedLogFile.push(tmpId);
-					var part2 = `Log file ${iCnt}: <input type=text class="input" id="tb${iCnt}" style="width:380px" > <input id="tbid${iCnt}" type="hidden" value="${tmpId}"/></div>`;
+					var part2 = `Log file ${iCnt}: <input type=text class="input" id="tb${iCnt}" style="width:370px" > <input id="tbid${iCnt}" type="hidden" value="${tmpId}"/></div>`;
 					container.append(part1 + part2);
 					$('#links').append(container);
 					var firstChild = $(`#div${iCnt} :first-child`);
 					tmpCp.insertAfter(firstChild);
 					$('#links').append(container);
 				}
-				else {
-					$(container).append('<label>Reached the limit</label>');
+				else {					
 					$('#btAdd').attr('class', 'bt-disable');
 					$('#btAdd').attr('disabled', 'disabled');
 				}
@@ -216,6 +237,10 @@
 						updateLogAreaWithFilter();
 					});
 				});
+
+				//Update ICntValue Text
+				$("#ICntValue").text(iCnt);
+
 			});
 			// REMOVE ONE ELEMENT PER CLICK.
 			$('#btRemove').click(function () {
@@ -224,6 +249,13 @@
 					iCnt = iCnt - 1;
 					idArr.splice(-1,1);
 				}
+				//Resume button state
+				if(iCnt<MAX_LOG_FILE)
+				{
+					$('#btAdd').attr('class', 'bt');
+					$('#btAdd').removeAttr('disabled');
+				}
+				$("#ICntValue").text(iCnt);
 			});
 			$('#btAdd').click();
 		});
@@ -240,6 +272,7 @@
 			updateLogAreaWithFilter();
 		}
 		function updateLogAreaWithFilter() {
+			console.time("updateLogAreaWithFilter");
 			$("#LogArea").empty();
 			var resultArray = [];
 			var arrayContainsSubString = function (filterArr, val) {
@@ -275,8 +308,10 @@
 				var rgbStr = tmpString.match(/rgb\(.*?\)/);
 				$('.' + idArr[i]).css("color", rgbStr[0]);
 			}
+			console.timeEnd("updateLogAreaWithFilter");
 		}
 		function gogogo() {
+			$(".loader").css("visibility","visible");
 			console.time("gogogo");
 			logArr = [];
 			$("#LogArea").empty();
@@ -285,7 +320,10 @@
 			for (var i = 1; i <= iCnt; i++) {
 				var docVal = $("#tb" + i).val();
 				var id = $("#tbid" + i).val();
-				
+				if(docVal == "")
+				{
+					continue
+				}
 				var tmpTimerName = "Read "+docVal;
 
 				console.time(tmpTimerName);
@@ -323,14 +361,17 @@
 			Promise.all(promises).then(function(){
 
 				console.timeEnd("(ALL)readTextFile");
+
 				console.time("logArr sort");
 				logArr.sort(sortlogArrByDatetime);
 				console.timeEnd("logArr sort");
-
-				console.time("UpdateLogAreaWithFilter");
+			
 				updateLogAreaWithFilter();
-				console.timeEnd("UpdateLogAreaWithFilter");
+				
 				console.timeEnd("gogogo");
+
+				$(".loader").css("visibility","hidden");
+
 			});
 		
 		}
@@ -381,7 +422,9 @@
 		<div style="padding:5px" id="main">
 			<input type="button" id="btAdd" value="Add" class="bt" />
 			<input type="button" id="btRemove" value="Remove" class="bt" />
+			<span id="ICntValue">0</span><span>/</span><span id="MAX_LOG_COUNT"></span>
 		</div>
+		<!--TODO overflow-y..?-->
 		<div id="links">
 		</div>
 		<hr>
@@ -446,7 +489,7 @@
 			<div id="IncludedText" style="font-style:italic"></div>
 		</div>
 		<hr>
-		<button style="padding:5px;margin:5px" onclick="gogogo()"> Go Go Go~ </button> <span id="Timer"></span>
+		<button style="padding:5px;margin:5px" onclick="gogogo()"> Go Go Go~ </button> <span id="Timer"></span> <div class="loader" style="display: inline-block;vertical-align: middle;visibility: hidden;"></div>
 	</div>
 </div>
 <div id="LogArea" style="height: auto;"></div>
