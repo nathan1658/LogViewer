@@ -84,44 +84,23 @@
 		var textFilter = [];
 		var textIncluded = [];
 		function readTextFile(file, id) {
+			return new Promise(function(resolve,reject){
 			var rawFile = new XMLHttpRequest();
-			rawFile.open("GET", file, false);
-			rawFile.onreadystatechange = function () {
+			rawFile.open("GET", file, true);
+			rawFile.onload = function () {
 				if (rawFile.readyState === 4) {
 					if (rawFile.status === 200 || rawFile.status == 0) {
 						var allText = rawFile.responseText;
-						//TODO seek for a better one
-						var logRegexFormat = $("#logRegexFormat").val();
-						var myRegex = new RegExp(logRegexFormat, "gm");
-						var arr = allText.match(myRegex);
-						if(arr==null||arr.length==0)
-						{
-							alert("Regex match failed for file "+rawFile.responseURL+"!");
-							return;
-						}
-						var regexStr = $('#dateRegex').val();
-						var regexp = new RegExp(regexStr);
-						for (var i = 0; i < arr.length; i++) {
-							try {
-								var dateStr = regexp.exec(arr[i])[0];
-								var dateFormat = $('#dateFormat').val();
-								var date = moment(dateStr, dateFormat);
-								var logLevelRegexFormat = $("#logLevelRegexFormat").val();
-								var logLevelRegex = new RegExp(logLevelRegexFormat, "gm");
-								var logLevel = logLevelRegex.exec(arr[i])[1];
-								logArr.push(new log(date, arr[i], file, id, logLevel));
-							} catch (err) {
-								console.log(err);
-							}
-						}
+						resolve({allText:allText,file:file,id:id});
 					}
 					if (rawFile.status !== 200) {
 						var errorMsg = 'URL: ' + rawFile.responseURL + '\nStatus code: ' + rawFile.status + '\nMessage: ' + rawFile.statusText;
-						alert(errorMsg);
+						reject(errorMsg);
 					}
 				}
 			}
 			rawFile.send(null);
+			})		
 		};
 		function log(datetime, content, url, id, logLevel) {
 			this.datetime = datetime;
@@ -241,6 +220,7 @@
 				if (iCnt != 1) {
 					$('#div' + iCnt).remove();
 					iCnt = iCnt - 1;
+					idArr.splice(-1,1);
 				}
 			});
 			$('#btAdd').click();
@@ -298,6 +278,7 @@
 			logArr = [];
 			$("#LogArea").empty();
 			console.time("(ALL)readTextFile");
+			var promises = [];
 			for (var i = 1; i <= iCnt; i++) {
 				var docVal = $("#tb" + i).val();
 				var id = $("#tbid" + i).val();
@@ -305,17 +286,50 @@
 				var tmpTimerName = "Read "+docVal;
 
 				console.time(tmpTimerName);
-				readTextFile(docVal, id);
+				var promise = readTextFile(docVal, id).then(function ({allText,file,id}){
+						//TODO seek for a better one
+						var logRegexFormat = $("#logRegexFormat").val();
+						var myRegex = new RegExp(logRegexFormat, "gm");
+						var arr = allText.match(myRegex);
+						if(arr==null||arr.length==0)
+						{
+							alert("Regex match failed for file "+rawFile.responseURL+"!");
+							return;
+						}
+						var regexStr = $('#dateRegex').val();
+						var regexp = new RegExp(regexStr);
+						for (var i = 0; i < arr.length; i++) {
+							try {
+								var dateStr = regexp.exec(arr[i])[0];
+								var dateFormat = $('#dateFormat').val();
+								var date = moment(dateStr, dateFormat);
+								var logLevelRegexFormat = $("#logLevelRegexFormat").val();
+								var logLevelRegex = new RegExp(logLevelRegexFormat, "gm");
+								var logLevel = logLevelRegex.exec(arr[i])[1];
+								logArr.push(new log(date, arr[i], file, id, logLevel));
+							} catch (err) {
+								console.log(err);
+							}
+						}
+				}).catch(function(err){
+				alert(err);
+				});			
 				console.timeEnd(tmpTimerName);
+				promises.push(promise);
 			}
-			console.timeEnd("(ALL)readTextFile");
-			console.time("logArr sort");
-			logArr.sort(sortlogArrByDatetime);
-			console.timeEnd("logArr sort");
+			Promise.all(promises).then(function(){
 
-			console.time("UpdateLogAreaWithFilter");
-			updateLogAreaWithFilter();
-			console.timeEnd("UpdateLogAreaWithFilter");
+				console.timeEnd("(ALL)readTextFile");
+				console.time("logArr sort");
+				logArr.sort(sortlogArrByDatetime);
+				console.timeEnd("logArr sort");
+
+				console.time("UpdateLogAreaWithFilter");
+				updateLogAreaWithFilter();
+				console.timeEnd("UpdateLogAreaWithFilter");
+
+			});
+		
 		}
 		function SelectAllbtnOnClick() {
 			$(".cb_logLevel").each(function () {
