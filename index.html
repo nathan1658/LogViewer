@@ -12,44 +12,55 @@
 			margin-top: 2px;
 			margin-bottom: 2px;
 		}
+
 		body {
 			font-family: Arial, Helvetica, sans-serif;
 			background: black;
 		}
+
 		.logLevelDiv>span {
 			display: inline-block;
 		}
+
 		.ControlPanel {
 			width: 550px;
 			right: 10;
 			position: fixed;
 		}
+
 		.regexForm label,
 		input {
 			display: inline-block;
 			margin-bottom: 5px;
 		}
+
 		.regexForm label {
 			width: 40%;
 			text-align: right;
 		}
+
 		.regexForm label+input {
 			width: 50%;
 			margin: 0 0 0 4%;
 		}
+
 		.regexForm input+input {
 			float: right;
 		}
-		
-		.finalRow button
-		{
-			padding:5px;
-			margin:5px;
+
+		#logFiles .ui-accordion-content {
+			padding: 0px;
+		}
+
+		.finalRow button {
+			padding: 5px;
+			margin: 5px;
 		}
 
 		/*TODO looking for pure css function*/
+
 		.ControlPanelContent {
-		/*	opacity: 0.5;
+			/*	opacity: 0.5;
 			transition: opacity .5s ease-out;*/
 			background: gainsboro;
 			padding: 15px;
@@ -62,12 +73,24 @@
 			}
 		*/
 
+		.settingSection .column {
+			display: table-cell;
+		}
+
+		div .column:first-child {
+			width: 40%;
+		}
+
 		.formItem {
 			width: 30%;
 		}
 
 		.ui-accordion-content {
- 		   background: none;
+			background: none;
+		}
+
+		.row {
+			margin-bottom: 5px;
 		}
 
 		.loader {
@@ -81,26 +104,43 @@
 		}
 
 		/* Safari */
+
 		@-webkit-keyframes spin {
-		0% { -webkit-transform: rotate(0deg); }
-		100% { -webkit-transform: rotate(360deg); }
+			0% {
+				-webkit-transform: rotate(0deg);
+			}
+			100% {
+				-webkit-transform: rotate(360deg);
+			}
 		}
 
 		@keyframes spin {
-		0% { transform: rotate(0deg); }
-		100% { transform: rotate(360deg); }
+			0% {
+				transform: rotate(0deg);
+			}
+			100% {
+				transform: rotate(360deg);
+			}
 		}
 
 		.noselect {
-  		-webkit-touch-callout: none; /* iOS Safari */
-    	-webkit-user-select: none; /* Safari */
-    	-khtml-user-select: none; /* Konqueror HTML */
-        -moz-user-select: none; /* Firefox */
-        -ms-user-select: none; /* Internet Explorer/Edge */
-        user-select: none; /* Non-prefixed version, currently
+			-webkit-touch-callout: none;
+			/* iOS Safari */
+			-webkit-user-select: none;
+			/* Safari */
+			-khtml-user-select: none;
+			/* Konqueror HTML */
+			-moz-user-select: none;
+			/* Firefox */
+			-ms-user-select: none;
+			/* Internet Explorer/Edge */
+			user-select: none;
+			/* Non-prefixed version, currently
                                   supported by Chrome and Opera */
 		}
+
 		/*Always show vertical scroll bar*/
+
 		body {
 			overflow-y: scroll;
 		}
@@ -116,27 +156,27 @@
 		var textFilter = [];
 		var textIncluded = [];
 		var MAX_LOG_FILE = 10;
-		var LOG_LEVELS = ["ALL","DEBUG","ERROR","FATAL","INFO","OFF","TRACE","WARN"];
+		var LOG_LEVELS = ["ALL", "DEBUG", "ERROR", "FATAL", "INFO", "OFF", "TRACE", "WARN"];
 		function readTextFile(file, id) {
-			return new Promise(function(resolve,reject){
-			console.time("XMLHttpRequest: "+file);
-			var rawFile = new XMLHttpRequest();
-			rawFile.open("GET", file, true);
-			rawFile.onload = function () {
-				if (rawFile.readyState === 4) {
-					console.timeEnd("XMLHttpRequest: "+file);
-					if (rawFile.status === 200 || rawFile.status == 0) {
-						var allText = rawFile.responseText;
-						resolve({allText:allText,file:file,id:id});
-					}
-					if (rawFile.status !== 200) {
-						var errorMsg = 'URL: ' + rawFile.responseURL + '\nStatus code: ' + rawFile.status + '\nMessage: ' + rawFile.statusText;
-						reject(errorMsg);
+			return new Promise(function (resolve, reject) {
+				console.time("XMLHttpRequest: " + file);
+				var rawFile = new XMLHttpRequest();
+				rawFile.open("GET", file, true);
+				rawFile.onload = function () {
+					if (rawFile.readyState === 4) {
+						console.timeEnd("XMLHttpRequest: " + file);
+						if (rawFile.status === 200 || rawFile.status == 0) {
+							var allText = rawFile.responseText;
+							resolve({ allText: allText, file: file, id: id });
+						}
+						if (rawFile.status !== 200) {
+							var errorMsg = 'URL: ' + rawFile.responseURL + '\nStatus code: ' + rawFile.status + '\nMessage: ' + rawFile.statusText;
+							reject(errorMsg);
+						}
 					}
 				}
-			}
-			rawFile.send(null);
-			})		
+				rawFile.send(null);
+			})
 		};
 		function log(datetime, content, url, id, logLevel) {
 			this.datetime = datetime;
@@ -144,26 +184,24 @@
 			this.url = url;
 			this.id = id;
 			this.logLevel = logLevel;
-		
+
 		}
 
-		function GetConfigurationJson()
-		{
-			var config={};
+		function GetConfigurationJson() {
+			var config = {};
 			var LogFileArr = [];
 			for (var i = 1; i <= iCnt; i++) {
 				var docVal = $("#tb" + i).val();
-				if(docVal != "")
-				{
+				if (docVal != "") {
 					LogFileArr.push(docVal);
 				}
 			}
-			
+
 			config.LogFileArr = LogFileArr;
 			config.dateRegex = $("#dateRegex").val();
 			config.dateFormat = $("#dateFormat").val();
-			config.logRegexFormat =  $("#logRegexFormat").val();
-			config.logLevelRegexFormat =  $("#logLevelRegexFormat").val();
+			config.logRegexFormat = $("#logRegexFormat").val();
+			config.logLevelRegexFormat = $("#logLevelRegexFormat").val();
 			config.checkedLogLevel = checkedLogLevel;
 
 			config.textFilter = textFilter;
@@ -173,50 +211,45 @@
 			return JSON.stringify(config);
 		}
 
-		function LoadConfig(jsonString)
-		{	
+		function LoadConfig(jsonString) {
 			logArr = [];
-			try{
+			try {
 				var config = JSON.parse(jsonString);
-			}catch(err)
-			{
-				alert("Error format. "+err);
+			} catch (err) {
+				alert("Error format. " + err);
 				return;
 			}
-			$("#dateRegex").val(config.dateRegex) ;
-		 	$("#dateFormat").val(config.dateFormat) ;
+			$("#dateRegex").val(config.dateRegex);
+			$("#dateFormat").val(config.dateFormat);
 			$("#logRegexFormat").val(config.logRegexFormat);
 			$("#logLevelRegexFormat").val(config.logLevelRegexFormat);
-			
-			while(iCnt<config.LogFileArr.length)
-			{
+
+			while (iCnt < config.LogFileArr.length) {
 				$("#btAdd").click();
 			}
-			while(iCnt>config.LogFileArr.length)
-			{
+			while (iCnt > config.LogFileArr.length) {
 				$("#btRemove").click();
 			}
 
-			config.LogFileArr.forEach(function(x,index) {
-				$("#tb" + (index+1)).val(x);
+			config.LogFileArr.forEach(function (x, index) {
+				$("#tb" + (index + 1)).val(x);
 			});
-			
+
 			UnselectAllbtnOnClick();
-			config.checkedLogLevel.forEach(x=>
-			{
-				$("#cb_"+x).prop('checked',true);
+			config.checkedLogLevel.forEach(x => {
+				$("#cb_" + x).prop('checked', true);
 			})
 
 			ClearTextFilter();
-			config.textFilter.forEach(x=>{
-				AddTextFilter(x,false);
+			config.textFilter.forEach(x => {
+				AddTextFilter(x, false);
 			});
 
 			ClearTextInclude();
-			config.textIncluded.forEach(x=>{
-				AddTextInclude(x,false);
+			config.textIncluded.forEach(x => {
+				AddTextInclude(x, false);
 			})
-			
+
 			updateLogAreaWithFilter();
 		}
 
@@ -231,15 +264,15 @@
 		function appendText(content, className) {
 			return (`<pre class="${className} logRow" style="display:block;">` + content + "</pre>")
 		}
-		function AddTextFilter(input,updateLog) {
-			
+		function AddTextFilter(input, updateLog) {
+
 			if (input != "") {
 				textFilter.push(input);
 				$("#filterInput").val("");
 			}
 			//Append text 
 			$("#filteredText").append(input + "<br/>");
-			if(updateLog){
+			if (updateLog) {
 				updateLogAreaWithFilter();
 			}
 		}
@@ -249,15 +282,15 @@
 			updateLogAreaWithFilter();
 		}
 		//For Text inclusion
-		function AddTextInclude(input,updateLog) {
-			
+		function AddTextInclude(input, updateLog) {
+
 			if (input != "") {
 				textIncluded.push(input);
 				$("#includeInput").val("");
 			}
 			//Append text 
 			$("#IncludedText").append(input + "<br/>");
-			if(updateLog){
+			if (updateLog) {
 				updateLogAreaWithFilter();
 			}
 		}
@@ -267,7 +300,7 @@
 			updateLogAreaWithFilter();
 		}
 
-		function copyToClipboard(text){
+		function copyToClipboard(text) {
 			var dummy = document.createElement("input");
 			document.body.appendChild(dummy);
 			dummy.setAttribute('value', text);
@@ -276,18 +309,26 @@
 			document.body.removeChild(dummy);
 		}
 
-		function GenerateConfig()
-		{
+		function GenerateConfigAndSaveToFile() {
+			var textToSave = GetConfigurationJson();
+
+			var hiddenElement = document.createElement('a');
+			hiddenElement.href = 'data:attachment/text,' + encodeURI(textToSave);
+			hiddenElement.target = '_blank';
+			hiddenElement.download = 'config.json';
+			hiddenElement.click();
+
+		}
+
+		function GenerateConfig() {
 			var config = GetConfigurationJson();
 			copyToClipboard(config);
 			alert("Configuration copied to clipboard.")
 		}
 
-		function PromptLoadConfig()
-		{
+		function PromptLoadConfig() {
 			var input = prompt("Enter config json below:");
-			if(input !=null)
-			{
+			if (input != null) {
 				LoadConfig(input);
 			}
 		}
@@ -297,15 +338,20 @@
 			initLogLevel();
 
 			$("#MAX_LOG_COUNT").text(MAX_LOG_FILE);
+
 			$(".settingSection").accordion({
-      			collapsible: true,
-				active: false
-    		});
+				collapsible: true,
+				heightStyle: "content",
+				active: 2
+			});
+
+			$("#logFiles").accordion('option', 'active', 0);
+
 			//init logLevelArray
 			checkedLogLevel = LOG_LEVELS;
 			var container = $(document.createElement('div'));
 			$('#btAdd').click(function () {
-				if (iCnt < MAX_LOG_FILE ) {
+				if (iCnt < MAX_LOG_FILE) {
 					iCnt = iCnt + 1;
 					var tmpId = getId();
 					idArr.push(tmpId);
@@ -337,7 +383,7 @@
 					tmpCp.insertAfter(firstChild);
 					$('#links').append(container);
 				}
-				else {					
+				else {
 					$('#btAdd').attr('class', 'bt-disable');
 					$('#btAdd').attr('disabled', 'disabled');
 				}
@@ -351,7 +397,7 @@
 							var index = checkedLogLevel.indexOf(this.value);
 							if (index !== -1) checkedLogLevel.splice(index, 1);
 						}
-						updateLogAreaWithFilter();						
+						updateLogAreaWithFilter();
 					});
 				});
 
@@ -364,11 +410,10 @@
 				if (iCnt != 1) {
 					$('#div' + iCnt).remove();
 					iCnt = iCnt - 1;
-					idArr.splice(-1,1);
+					idArr.splice(-1, 1);
 				}
 				//Resume button state
-				if(iCnt<MAX_LOG_FILE)
-				{
+				if (iCnt < MAX_LOG_FILE) {
 					$('#btAdd').attr('class', 'bt');
 					$('#btAdd').removeAttr('disabled');
 				}
@@ -378,12 +423,12 @@
 
 			$('#AddTextBtn').click(function () {
 				var input = $("#includeInput").val();
-				AddTextInclude(input,true);
+				AddTextInclude(input, true);
 			});
-						
+
 			$('#AddTextFilterBtn').click(function () {
 				var input = $("#filterInput").val();
-				AddTextFilter(input,true);
+				AddTextFilter(input, true);
 			});
 
 			$('#GenerateConfigBtn').click(function () {
@@ -394,39 +439,57 @@
 				PromptLoadConfig();
 			});
 
+			$('#FileGenerateConfigBtn').click(function () {
+				GenerateConfigAndSaveToFile();
+			});
+
+			$('#FileLoadConfigBtn').click(function () {
+				$("#jsonFile").click();
+			});
+			$("#jsonFile").change(function (evt) {
+				try{
+				var files = evt.target.files; // FileList object
+				var file = files[0];
+				var reader = new FileReader();
+				reader.readAsBinaryString(file);
+				var jsonString = reader.result;
+				}catch(err)
+				{
+					alert("Could not load file."+err);
+					return;
+				}
+				LoadConfig(jsonString);
+			}
+			);
+
 			//TODO looking for pure css function..
-			$(".colorpicker").hover(function()
-			{
-				$(".ControlPanelContent").css('transition','transition: opacity .5s ease-out');
-				$(".ControlPanelContent").css('opacity','1');			
-			},function()
-			{
-				$(".ControlPanelContent").css('transition','opacity .5s ease-out');
-				$(".ControlPanelContent").css('opacity','0.5');					
+			$(".colorpicker").hover(function () {
+				$(".ControlPanelContent").css('transition', 'transition: opacity .5s ease-out');
+				$(".ControlPanelContent").css('opacity', '1');
+			}, function () {
+				$(".ControlPanelContent").css('transition', 'opacity .5s ease-out');
+				$(".ControlPanelContent").css('opacity', '0.5');
 			});
 
-			$(".ControlPanelContent").hover(function()
-			{
-				$(this).css('transition','transition: opacity .5s ease-out');
-				$(this).css('opacity','1');
-			},function()
-			{
-				$(this).css('transition','opacity .5s ease-out');
-				$(this).css('opacity','0.5');			
+			$(".ControlPanelContent").hover(function () {
+				$(this).css('transition', 'transition: opacity .5s ease-out');
+				$(this).css('opacity', '1');
+			}, function () {
+				$(this).css('transition', 'opacity .5s ease-out');
+				$(this).css('opacity', '0.5');
 			});
 
-		
+
 		});
 
-		function initLogLevel()
-		{
+		function initLogLevel() {
 			LOG_LEVELS.forEach(element => {
-				
-			var tmpSpan = `<span>
+
+				var tmpSpan = `<span>
 								<input type="checkbox" id="cb_${element}" class="cb_logLevel" value="${element}" checked>
 								<label for="cb_${element}">${element}</label>
-							</span>`;							
-			$("#logLevelDiv").append(tmpSpan);
+							</span>`;
+				$("#logLevelDiv").append(tmpSpan);
 
 			});
 		}
@@ -459,9 +522,8 @@
 					return;
 				if (arrayContainsSubString(textFilter, val.content))
 					return;
-				if(textIncluded.length>0)
-				{					
-					if(!arrayContainsSubString(textIncluded,val.content))
+				if (textIncluded.length > 0) {
+					if (!arrayContainsSubString(textIncluded, val.content))
 						return;
 				}
 				resultArray.push(val);
@@ -470,7 +532,7 @@
 				$('#LogArea').append(appendText(val.content, val.id));
 			});
 			//TODO work around for selecting last line
-			$('#LogArea').append(appendText("&zwnj;","noselect"));
+			$('#LogArea').append(appendText("&zwnj;", "noselect"));
 
 			for (var i = 0; i < idArr.length; i++) {
 				//Get color picker value
@@ -483,7 +545,7 @@
 			$("#NumOfLog").text(resultArray.length);
 		}
 		function gogogo() {
-			$(".loader").css("visibility","visible");
+			$(".loader").css("visibility", "visible");
 			console.time("gogogo");
 			logArr = [];
 			$("#LogArea").empty();
@@ -492,71 +554,69 @@
 			for (var i = 1; i <= iCnt; i++) {
 				var docVal = $("#tb" + i).val();
 				var id = $("#tbid" + i).val();
-				if(docVal == "")
-				{
+				if (docVal == "") {
 					continue
 				}
-				var tmpTimerName = "Read "+docVal;
+				var tmpTimerName = "Read " + docVal;
 
 				console.time(tmpTimerName);
-				var promise = readTextFile(docVal, id).then(function ({allText,file,id}){
-						//TODO seek for a better one
-						var logRegexFormat = $("#logRegexFormat").val();
-						var myRegex = new RegExp(logRegexFormat, "gm");
-						var arr = allText.match(myRegex);
-						if(arr==null||arr.length==0)
-						{
-							alert("Regex match failed for file "+rawFile.responseURL+"!");
-							return;
+				var promise = readTextFile(docVal, id).then(function ({ allText, file, id }) {
+					//TODO seek for a better one
+					var logRegexFormat = $("#logRegexFormat").val();
+					var myRegex = new RegExp(logRegexFormat, "gm");
+					var arr = allText.match(myRegex);
+					if (arr == null || arr.length == 0) {
+						alert("Regex match failed for file " + rawFile.responseURL + "!");
+						return;
+					}
+					var regexStr = $('#dateRegex').val();
+					var regexp = new RegExp(regexStr);
+					for (var i = 0; i < arr.length; i++) {
+						try {
+							var dateStr = regexp.exec(arr[i])[0];
+							var dateFormat = $('#dateFormat').val();
+							var date = moment(dateStr, dateFormat);
+							var logLevelRegexFormat = $("#logLevelRegexFormat").val();
+							var logLevelRegex = new RegExp(logLevelRegexFormat, "gm");
+							var logLevel = logLevelRegex.exec(arr[i])[1];
+							logArr.push(new log(date, arr[i], file, id, logLevel));
+						} catch (err) {
+							console.log(err);
 						}
-						var regexStr = $('#dateRegex').val();
-						var regexp = new RegExp(regexStr);
-						for (var i = 0; i < arr.length; i++) {
-							try {
-								var dateStr = regexp.exec(arr[i])[0];
-								var dateFormat = $('#dateFormat').val();
-								var date = moment(dateStr, dateFormat);
-								var logLevelRegexFormat = $("#logLevelRegexFormat").val();
-								var logLevelRegex = new RegExp(logLevelRegexFormat, "gm");
-								var logLevel = logLevelRegex.exec(arr[i])[1];
-								logArr.push(new log(date, arr[i], file, id, logLevel));
-							} catch (err) {
-								console.log(err);
-							}
-						}
-				}).catch(function(err){
-				alert(err);
-				});			
+					}
+				}).catch(function (err) {
+					alert(err);
+				});
 				console.timeEnd(tmpTimerName);
 				promises.push(promise);
 			}
-			Promise.all(promises).then(function(){
+			Promise.all(promises).then(function () {
 
 				console.timeEnd("(ALL)readTextFile");
 
 				console.time("logArr sort");
 				logArr.sort(sortlogArrByDatetime);
 				console.timeEnd("logArr sort");
-			
+
 				updateLogAreaWithFilter();
-				
+
 				console.timeEnd("gogogo");
 
-				$(".loader").css("visibility","hidden");
+				$(".loader").css("visibility", "hidden");
 
 			});
-		
+
 		}
 		function SelectAllbtnOnClick() {
 			$(".cb_logLevel").each(function () {
-				$(this).prop('checked', true);				
+				$(this).prop('checked', true);
 			});
 			checkedLogLevel = LOG_LEVELS;
 			updateLogAreaWithFilter();
 		}
 		function UnselectAllbtnOnClick() {
 			$(".cb_logLevel").each(function () {
-				$(this).prop('checked', false);					
+				$(this).prop('checked', false);
 			});
 			checkedLogLevel = [];
 			updateLogAreaWithFilter();
@@ -586,58 +646,97 @@
 				<input id="dateFormat" value="YYYY-MM-DD hh:mm:ss" />
 
 				<label>Log Regex format:</label>
-				<input id="logRegexFormat" value="^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}[\s\S]+?((?=^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}|$)(?!\n|\s))"/>
+				<input id="logRegexFormat" value="^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}[\s\S]+?((?=^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}|$)(?!\n|\s))"
+				/>
 
 				<label>Loglevel Regex format:</label>
 				<input id="logLevelRegexFormat" value="^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\S*\s([\S]+)" />
 			</div>
 		</div>
 		<hr>
-		<div style="padding:5px" id="main">
-			<input type="button" id="btAdd" value="Add" class="bt" />
-			<input type="button" id="btRemove" value="Remove" class="bt" />
-			<span id="ICntValue">0</span><span>/</span><span id="MAX_LOG_COUNT"></span>
-		</div>
-		<!--TODO overflow-y..?-->
-		<div id="links">
+		<div class="settingSection" id="logFiles">
+			<h3>Log files</h3>
+			<div>
+				<div style="padding:5px" id="main">
+					<input type="button" id="btAdd" value="Add" class="bt" />
+					<input type="button" id="btRemove" value="Remove" class="bt" />
+					<span id="ICntValue">0</span>
+					<span>/</span>
+					<span id="MAX_LOG_COUNT"></span>
+				</div>
+				<!--TODO overflow-y..?-->
+				<div id="links">
+				</div>
+			</div>
 		</div>
 		<hr>
 		<!--TODO may be use a array here?-->
 		<div class="logLevelDiv" id="logLevelDiv">
-		
+
 		</div>
 		<br>
 		<input type="button" onclick="SelectAllbtnOnClick()" value="Select All">
 
 		<input type="button" onclick="UnselectAllbtnOnClick()" value="Unselect All">
 		<hr>
-		<div>
-		
-				Ignore Text:
-			
-			<input type="textbox" id="filterInput">
-			<input type="button" value="Add" id="AddTextFilterBtn" ></input>
-			<input type="button" value="Clear All" onclick="ClearTextFilter()"></input>
-			<div id="filteredText" style="font-weight:bold"></div>
+		<div class="settingSection">
+			<h3>Ignore Text</h3>
+			<div>Ignore Text:
+
+				<input type="textbox" id="filterInput">
+				<input type="button" value="Add" id="AddTextFilterBtn"></input>
+				<input type="button" value="Clear All" onclick="ClearTextFilter()"></input>
+				<div id="filteredText" style="font-weight:bold"></div>
+			</div>
 		</div>
 		<hr>
-		<div>		
-			
-				Include:
-					
-			<input type="textbox" id="includeInput">
-			<input type="button" value="Add" id="AddTextBtn" ></input>
-			<input type="button" value="Clear All" onclick="ClearTextInclude()"></input>
-			<div id="IncludedText" style="font-weight:bold"></div>
+		<div class="settingSection">
+			<h3>Include Text</h3>
+			<div> Include:
+				<input type="textbox" id="includeInput">
+				<input type="button" value="Add" id="AddTextBtn"></input>
+				<input type="button" value="Clear All" onclick="ClearTextInclude()"></input>
+				<div id="IncludedText" style="font-weight:bold"></div>
+			</div>
+		</div>
+		<hr>
+		<div class="settingSection">
+			<h3>Save/Load setting</h3>
+			<div>
+				<div class="row">
+					<div class="column">
+						<span>
+							Clipboard:
+						</span>
+					</div>
+					<div class="column">
+						<button id="GenerateConfigBtn">Generate</button>
+						<button id="LoadConfigBtn">Load</button>
+					</div>
+				</div>
+				<div class="row">
+					<div class="column">
+						<span>
+							File:
+						</span>
+					</div>
+					<div class="column">
+						<button id="FileGenerateConfigBtn">Generate</button>
+						<button id="FileLoadConfigBtn">Load</button>
+						<input type="file" id="jsonFile" style="display:none">
+					</div>
+				</div>
+
+			</div>
 		</div>
 		<hr>
 		<div class="finalRow">
-			<button  onclick="gogogo()"> Go Go Go~ </button> <span id="Timer"></span> <div class="loader" style="display: inline-block;vertical-align: middle;visibility: hidden;"></div>
-			<span>Number of log: </span><span id="NumOfLog">0</span>
-			<div style="float:right">
-				<button id="GenerateConfigBtn">GenerateConfig</button>
-				<button id="LoadConfigBtn">Load config</button>
-			</div>
+			<button onclick="gogogo()"> Go Go Go~ </button>
+			<span id="Timer"></span>
+			<div class="loader" style="display: inline-block;vertical-align: middle;visibility: hidden;"></div>
+			<span>Number of log: </span>
+			<span id="NumOfLog">0</span>
+
 		</div>
 	</div>
 </div>
