@@ -3,155 +3,19 @@
 
 <head>
 	<meta charset="UTF-8">
+	<script>if (typeof module === 'object') { window.module = module; module = undefined; }</script>
 	<script src="./js/jquery-3.3.1.min.js"></script>
 	<script src="./js/moment.js"></script>
 	<script src="./js/jquery-ui.js"></script>
+
 	<link rel="stylesheet" href="./css/jquery-ui.css">
-	<style>
-		.logRow {
-			margin-top: 2px;
-			margin-bottom: 2px;
-		}
+	<link rel="stylesheet" href="./css/default.css" />
 
-		body {
-			font-family: Arial, Helvetica, sans-serif;
-			background: black;
-		}
-
-		.logLevelDiv>span {
-			display: inline-block;
-		}
-
-		.ControlPanel {
-			width: 550px;
-			right: 10;
-			position: fixed;
-		}
-
-		.regexForm label,
-		input {
-			display: inline-block;
-			margin-bottom: 5px;
-		}
-
-		.regexForm label {
-			width: 40%;
-			text-align: right;
-		}
-
-		.regexForm label+input {
-			width: 50%;
-			margin: 0 0 0 4%;
-		}
-
-		.regexForm input+input {
-			float: right;
-		}
-
-		#logFiles .ui-accordion-content {
-			padding: 0px;
-		}
-
-		.finalRow button {
-			padding: 5px;
-			margin: 5px;
-		}
-
-		/*TODO looking for pure css function*/
-
-		.ControlPanelContent {
-			/*	opacity: 0.5;
-			transition: opacity .5s ease-out;*/
-			background: gainsboro;
-			padding: 15px;
-			border-radius: 5px;
-		}
-
-		/*	.ControlPanelContent:hover {
-				opacity: 1;
-				transition: opacity .5s ease-out;
-			}
-		*/
-
-		.settingSection .column {
-			display: table-cell;
-		}
-
-		div .column:first-child {
-			width: 40%;
-		}
-
-		div .column button {
-			width: 100px;
-		}
-
-		.formItem {
-			width: 30%;
-		}
-
-		.ui-accordion-content {
-			background: none;
-		}
-
-		.row {
-			margin-bottom: 5px;
-		}
-
-		.loader {
-			border: 6px solid #f3f3f3;
-			border-radius: 50%;
-			border-top: 6px solid #0a0a0a;
-			width: 20px;
-			height: 20px;
-			-webkit-animation: spin 2s linear infinite;
-			animation: spin 1s linear infinite;
-		}
-
-		/* Safari */
-
-		@-webkit-keyframes spin {
-			0% {
-				-webkit-transform: rotate(0deg);
-			}
-			100% {
-				-webkit-transform: rotate(360deg);
-			}
-		}
-
-		@keyframes spin {
-			0% {
-				transform: rotate(0deg);
-			}
-			100% {
-				transform: rotate(360deg);
-			}
-		}
-
-		.noselect {
-			-webkit-touch-callout: none;
-			/* iOS Safari */
-			-webkit-user-select: none;
-			/* Safari */
-			-khtml-user-select: none;
-			/* Konqueror HTML */
-			-moz-user-select: none;
-			/* Firefox */
-			-ms-user-select: none;
-			/* Internet Explorer/Edge */
-			user-select: none;
-			/* Non-prefixed version, currently
-                                  supported by Chrome and Opera */
-		}
-
-		/*Always show vertical scroll bar*/
-
-		body {
-			overflow-y: scroll;
-		}
-	</style>
 	<link rel="stylesheet" media="screen" type="text/css" href="css/colorpicker.css" />
 	<script src="./js/colorpicker.js"></script>
+	<script>if (window.module) module = window.module;</script>
 	<script>
+		var RunningInElectron = false;
 		var iCnt = 0;
 		var logArr = [];
 		var idArr = [];
@@ -179,9 +43,20 @@
 						}
 					}
 				}
-				rawFile.send(null);
-			})
-		};
+				rawFile.onerror = function (e) {
+					alert("Failed to load file " + file);
+					reject("Failed to load file.");
+				}
+
+				try {
+					rawFile.send(null);
+				} catch (err) {
+					alert("Failed to load file " + file + "," + err);
+					reject(err);
+				}
+			});
+		}
+
 		function log(datetime, content, url, id, logLevel) {
 			this.datetime = datetime;
 			this.content = content;
@@ -334,14 +209,26 @@
 		}
 
 		function PromptLoadConfig() {
-			var input = prompt("Enter config json below:");
-			if (input != null) {
-				LoadConfig(input);
+
+			if (RunningInElectron) {
+				var dialogs = Dialogs(opts = {})
+				dialogs.prompt('Enter config json below:', '', function (ok) {
+					if (ok != undefined) {
+						LoadConfig(ok);
+					}
+				})
+			} else {
+				var input = prompt("Enter config json below:");
+				if (input != null) {
+					LoadConfig(input);
+				}
 			}
 		}
 
 		$(function () {
-
+			if ((window && window.process && window.process.type) != undefined) {
+				RunningInElectron = true;
+			}
 			initLogLevel();
 
 			$("#MAX_LOG_COUNT").text(MAX_LOG_FILE);
@@ -497,6 +384,26 @@
 				$(".ControlPanelContent").css('transition', 'opacity .5s ease-out');
 				$(".ControlPanelContent").css('opacity', '0.5');
 			});
+			//Electron init..
+			if (RunningInElectron) {
+				var args = require('electron').remote.process.argv;
+				var configPath = args[1];
+				if (configPath != null) {
+					const fs = require("fs");
+					// Asynchronous read
+					fs.readFile(configPath, function (err, data) {
+						if (err) {
+							return alert(err);
+						}
+						var configJson = data.toString();
+						LoadConfig(configJson);
+					});
+				}
+			}
+			//Hide title bar if running in native html
+			if (!RunningInElectron) {
+				$("#title-bar").css("visibility", "collapse");
+			}
 
 		});
 
@@ -602,8 +509,6 @@
 							console.log(err);
 						}
 					}
-				}).catch(function (err) {
-					alert(err);
 				});
 				console.timeEnd(tmpTimerName);
 				promises.push(promise);
@@ -622,6 +527,8 @@
 
 				$(".loader").css("visibility", "hidden");
 
+			}, function () {
+				$(".loader").css("visibility", "hidden");
 			});
 
 		}
@@ -646,119 +553,161 @@
 				$("#ControlPanel").animate({ right: panelWidth * -1 });
 			}
 			else {
-				$("#ControlPanel").animate({ right: 10 });
+				$("#ControlPanel").animate({ right: 25 });
 			}
 		}
 	</script>
 </head>
-<body>
-<div id="ControlPanel" class="ControlPanel noselect">
-	<button id="MenuBtn" style="position: absolute;left: -50px;height: 40px;width: 40px;font-size: 30px;" onclick="OpenMenu()">≡</button>
-	<div class="ControlPanelContent">
-		<div class="regexForm settingSection">
-			<h3>Regex Settings</h3>
-			<div>
-				<label>Regex for date:</label>
-				<input id="dateRegex" value="[\S]+\s+[\S]+" />
 
-				<label>Datetime format:</label>
-				<input id="dateFormat" value="YYYY-MM-DD hh:mm:ss" />
+<body style="overflow: hidden">
+	<div id="title-bar" class="noselect" style="height: 3%;">
 
-				<label>Log Regex format:</label>
-				<input id="logRegexFormat" value="^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}[\s\S]+?((?=^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}|$)(?!\n|\s))"
-				/>
+		<div id="title">Log Viewer</div>
 
-				<label>Loglevel Regex format:</label>
-				<input id="logLevelRegexFormat" value="^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\S*\s([\S]+)" />
-			</div>
+		<div id="title-bar-btns">
+
+			<button id="min-btn">-</button>
+
+			<button id="max-btn">+</button>
+
+			<button id="close-btn">x</button>
+
 		</div>
-		<hr>
-		<div class="settingSection" id="logFiles">
-			<h3>Log files</h3>
-			<div>
-				<div style="padding:5px" id="main">
-					<input type="button" id="btAdd" value="Add" class="bt" />
-					<input type="button" id="btRemove" value="Remove" class="bt" />
-					<span id="ICntValue">0</span>
-					<span>/</span>
-					<span id="MAX_LOG_COUNT"></span>
+
+	</div>
+	<div id="ControlPanel" class="ControlPanel noselect">
+		<button id="MenuBtn" style="position: absolute;left: -50px;height: 35px;width: 35px;font-size: 20px;" onclick="OpenMenu()">≡</button>
+		<div class="ControlPanelContent">
+			<div class="regexForm settingSection">
+				<h3>Regex Settings</h3>
+				<div>
+					<label>Regex for date:</label>
+					<input id="dateRegex" value="[\S]+\s+[\S]+" />
+
+					<label>Datetime format:</label>
+					<input id="dateFormat" value="YYYY-MM-DD hh:mm:ss" />
+
+					<label>Log Regex format:</label>
+					<input id="logRegexFormat" value="^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}[\s\S]+?((?=^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}|$)(?!\n|\s))"
+					/>
+
+					<label>Loglevel Regex format:</label>
+					<input id="logLevelRegexFormat" value="^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\S*\s([\S]+)" />
 				</div>
-				<!--TODO overflow-y..?-->
-				<div id="links">
-				</div>
 			</div>
-		</div>
-		<hr>
-		<!--TODO may be use a array here?-->
-		<div class="logLevelDiv" id="logLevelDiv">
-
-		</div>
-		<br>
-		<input type="button" onclick="SelectAllbtnOnClick()" value="Select All">
-
-		<input type="button" onclick="UnselectAllbtnOnClick()" value="Unselect All">
-		<hr>
-		<div class="settingSection">
-			<h3>Ignore Text</h3>
-			<div>Ignore Text:
-
-				<input type="textbox" id="filterInput">
-				<input type="button" value="Add" id="AddTextFilterBtn"></input>
-				<input type="button" value="Clear All" onclick="ClearTextFilter()"></input>
-				<div id="filteredText" style="font-weight:bold"></div>
-			</div>
-		</div>
-		<hr>
-		<div class="settingSection">
-			<h3>Include Text</h3>
-			<div> Include:
-				<input type="textbox" id="includeInput">
-				<input type="button" value="Add" id="AddTextBtn"></input>
-				<input type="button" value="Clear All" onclick="ClearTextInclude()"></input>
-				<div id="IncludedText" style="font-weight:bold"></div>
-			</div>
-		</div>
-		<hr>
-		<div class="settingSection">
-			<h3>Save/Load setting</h3>
-			<div style="display: table;width: 100%;border:0;">
-				<div class="row">
-					<div class="column">
-						<span>
-							Clipboard:
-						</span>
+			<hr>
+			<div class="settingSection" id="logFiles">
+				<h3>Log files</h3>
+				<div>
+					<div style="padding:5px" id="main">
+						<input type="button" id="btAdd" value="Add" class="bt" />
+						<input type="button" id="btRemove" value="Remove" class="bt" />
+						<span id="ICntValue">0</span>
+						<span>/</span>
+						<span id="MAX_LOG_COUNT"></span>
 					</div>
-					<div class="column">
-						<button id="GenerateConfigBtn">Generate</button>
-						<button id="LoadConfigBtn">Load</button>
+					<!--TODO overflow-y..?-->
+					<div id="links">
 					</div>
 				</div>
-				<div class="row">
-					<div class="column">
-						<span>
-							File:
-						</span>
-					</div>
-					<div class="column">
-						<button id="FileGenerateConfigBtn">Generate</button>
-						<button id="FileLoadConfigBtn">Load</button>
-						<input type="file" id="jsonFile" style="display:none">
-					</div>
-				</div>
+			</div>
+			<hr>
+			<!--TODO may be use a array here?-->
+			<div class="logLevelDiv" id="logLevelDiv">
 
 			</div>
-		</div>
-		<hr>
-		<div class="finalRow">
-			<button onclick="gogogo()"> Go Go Go~ </button>
-			<span id="Timer"></span>
-			<div class="loader" style="display: inline-block;vertical-align: middle;visibility: hidden;"></div>
-			<span>Number of log row: </span>
-			<span id="NumOfLog">0</span>
+			<br>
+			<input type="button" onclick="SelectAllbtnOnClick()" value="Select All">
 
+			<input type="button" onclick="UnselectAllbtnOnClick()" value="Unselect All">
+			<hr>
+			<div class="settingSection">
+				<h3>Ignore Text</h3>
+				<div style="display: table;width:100%;border:0">
+					<div class="row">
+						<div class="column">
+							<span>
+								Ignore Text:
+							</span>
+						</div>
+						<div class="column">
+							<input type="textbox" id="filterInput">
+							<input type="button" value="Add" id="AddTextFilterBtn"></input>
+							<input type="button" value="Clear All" onclick="ClearTextFilter()"></input>
+						</div>
+					</div>
+					<div class="row">
+						<div class="column">
+							<div id="filteredText" style="font-weight:bold"></div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<hr>
+			<div class="settingSection">
+				<h3>Include Text</h3>
+				<div style="display: table;width:100%;border:0">
+					<div class="row">
+						<div class="column">
+							<span>Include:
+							</span>
+						</div>
+						<div class="column">
+							<input type="textbox" id="includeInput">
+							<input type="button" value="Add" id="AddTextBtn"></input>
+							<input type="button" value="Clear All" onclick="ClearTextInclude()"></input>
+						</div>
+					</div>
+					<div class="row">
+						<div class="column">
+							<div id="IncludedText" style="font-weight:bold"></div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<hr>
+			<div class="settingSection">
+				<h3>Save/Load setting</h3>
+				<div style="display: table;width: 100%;border:0;">
+					<div class="row">
+						<div class="column">
+							<span>
+								Clipboard:
+							</span>
+						</div>
+						<div class="column">
+							<button id="GenerateConfigBtn">Generate</button>
+							<button id="LoadConfigBtn">Load</button>
+						</div>
+					</div>
+					<div class="row">
+						<div class="column">
+							<span>
+								File:
+							</span>
+						</div>
+						<div class="column">
+							<button id="FileGenerateConfigBtn">Generate</button>
+							<button id="FileLoadConfigBtn">Load</button>
+							<input type="file" id="jsonFile" style="display:none">
+						</div>
+					</div>
+
+				</div>
+			</div>
+			<hr>
+			<div class="finalRow">
+				<button onclick="gogogo()"> Go Go Go~ </button>
+				<span id="Timer"></span>
+				<div class="loader" style="display: inline-block;vertical-align: middle;visibility: hidden;"></div>
+				<span>Number of log row: </span>
+				<span id="NumOfLog">0</span>
+
+			</div>
 		</div>
 	</div>
-</div>
-<div id="LogArea" style="height: 100%;"></div>
+	<div id="LogArea" style="height: 97%;overflow: auto;"></div>
 </body>
+
+
 </html>

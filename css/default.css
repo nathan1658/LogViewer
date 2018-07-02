@@ -1,0 +1,196 @@
+html {
+    margin: 0px;
+    padding: 0px;
+}
+body {
+    padding: 0px;
+    margin: 0px;
+    background-color: #2D2D30;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    right: 0px;
+    bottom: 0px;
+}
+.logRow {
+    margin-top: 2px;
+    margin-bottom: 2px;
+}
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: black;
+}
+.logLevelDiv>span {
+    display: inline-block;
+}
+.ControlPanel {
+    width: 550px;
+    right: 25;
+    position: fixed;
+}
+.regexForm label, input {
+    display: inline-block;
+    margin-bottom: 5px;
+}
+.regexForm label {
+    width: 40%;
+    text-align: right;
+}
+.regexForm label+input {
+    width: 50%;
+    margin: 0 0 0 4%;
+}
+.regexForm input+input {
+    float: right;
+}
+#logFiles .ui-accordion-content {
+    padding: 0px;
+}
+.finalRow button {
+    padding: 5px;
+    margin: 5px;
+}
+/*TODO looking for pure css function*/
+.ControlPanelContent {
+   /* opacity: 0.5;
+    transition: opacity .5s ease-out;
+   */
+    background: gainsboro;
+    padding: 15px;
+    border-radius: 5px;
+}
+/* .ControlPanelContent:hover {
+    opacity: 1;
+    transition: opacity .5s ease-out;
+}
+*/
+.settingSection .column {
+    display: table-cell;
+}
+div .column:first-child {
+    width: 100px;
+}
+div .column button {
+    width: 100px;
+}
+.formItem {
+    width: 30%;
+}
+.ui-accordion-content {
+    background: none;
+}
+.row {
+    margin-bottom: 5px;
+}
+.loader {
+    border: 6px solid #f3f3f3;
+    border-radius: 50%;
+    border-top: 6px solid #0a0a0a;
+    width: 20px;
+    height: 20px;
+    -webkit-animation: spin 2s linear infinite;
+    animation: spin 1s linear infinite;
+}
+/* Safari */
+@-webkit-keyframes spin {
+    0% {
+        -webkit-transform: rotate(0deg);
+   }
+    100% {
+        -webkit-transform: rotate(360deg);
+   }
+}
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+   }
+    100% {
+        transform: rotate(360deg);
+   }
+}
+.noselect {
+    -webkit-touch-callout: none;
+   /* iOS Safari */
+    -webkit-user-select: none;
+   /* Safari */
+    -khtml-user-select: none;
+   /* Konqueror HTML */
+    -moz-user-select: none;
+   /* Firefox */
+    -ms-user-select: none;
+   /* Internet Explorer/Edge */
+    user-select: none;
+   /* Non-prefixed version, currently supported by Chrome and Opera */
+}
+/*Always show vertical scroll bar*/
+#title-bar {
+    -webkit-app-region: drag;
+    height: 32px;
+    padding: 0px;
+    margin: 0px;
+    color: #ADADAD;
+    background: transparent;
+    font-family: sans-serif;
+}
+#title {
+    position: fixed;
+    top: 0px;
+    left: 12px;
+    line-height: 32px;
+    font-size: 14px;
+}
+#title-bar-btns {
+    -webkit-app-region: no-drag;
+    position: fixed;
+    top: 1px;
+    right: 0px;
+}
+#title-bar-btns button {
+    height: 32px;
+    width: 32px;
+    background-color: transparent;
+    border: none;
+    color: #F1F1F1;
+    font-size: 16px;
+}
+#title-bar-btns button:hover {
+    background-color: #3F3F41;
+}
+#content {
+    padding: 12px;
+    color: #CCCCCC;
+}
+/* width */
+::-webkit-scrollbar {
+    width: 10px;
+}
+/* Track */
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+/* Handle */
+::-webkit-scrollbar-thumb {
+    background: #888;
+}
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+/* * .electron-in-page-search-window is a class specified to default * <webview> element for search window. */
+.electron-in-page-search-window {
+    position: fixed;
+    top: 0;
+    right: 0;
+    border: solid grey 1px;
+    background-color: white;
+    width: 300px;
+    height: 36px;
+}
+/* * .search-inactive is added to search window <webview> when the window * is inactive. */
+.search-inactive {
+    visibility: hidden;
+}
+/* * .search-inactive is added to search window <webview> when the window * is active. */
+.search-active {
+    visibility: visible;
+}
