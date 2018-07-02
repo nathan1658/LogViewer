@@ -39,6 +39,7 @@
 						}
 						if (rawFile.status !== 200) {
 							var errorMsg = 'URL: ' + rawFile.responseURL + '\nStatus code: ' + rawFile.status + '\nMessage: ' + rawFile.statusText;
+							alert(errorMsg);
 							reject(errorMsg);
 						}
 					}
