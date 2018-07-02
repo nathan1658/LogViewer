@@ -480,7 +480,8 @@
 			for (var i = 1; i <= iCnt; i++) {
 				var docVal = $("#tb" + i).val();
 				var id = $("#tbid" + i).val();
-				if (docVal == "") {
+				var cbChecked = $(`#div${i} input`).first().prop('checked');
+				if (docVal == "" || !cbChecked) {
 					continue
 				}
 				var tmpTimerName = "Read " + docVal;
