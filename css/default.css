@@ -12,6 +12,11 @@ body {
     right: 0px;
     bottom: 0px;
 }
+
+pre{
+    padding-left: 20px;
+}
+
 .logRow {
     margin-top: 2px;
     margin-bottom: 2px;
